@@ -3,7 +3,7 @@ package org.example;
 import org.joml.Vector2i;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -11,8 +11,8 @@ public class OverlappingModel {
 
     private Grid input;
     private int patternSize;
-    private int maximumTries = 10000000;
-    private int maxPropagationTries = 100;
+    private int maximumTries = 100000;
+    private int maxPropagationTries = 10;
 
     public List<Pattern> patterns;
 
@@ -46,20 +46,24 @@ public class OverlappingModel {
         int propagationTries = 0;
         this.entropy = wave.stream().map(this::getEntropy).collect(Collectors.toList());
         while (collapsedCells < outputSize.x * outputSize.y && tries < maximumTries) {
+            //create backup if propagation fails
+            List<List<Integer>> snapshot = new ArrayList<>();
+            wave.forEach(cell -> snapshot.add(new ArrayList<>(cell)));
+
             //solve
             //collapse min entropy cell
             int minEntropyIndex = getLowestEntropyCell();
             wave.set(minEntropyIndex, Collections.singletonList(selectRandomPattern(minEntropyIndex)));
             this.entropy.set(minEntropyIndex, getEntropy(minEntropyIndex));
 
-            //create backup if propagation fails
-            List<List<Integer>> snapshot = new ArrayList<>();
-            wave.forEach(cell -> snapshot.add(new ArrayList<>(cell)));
 
             boolean success = propagate(minEntropyIndex);
+//            if (checkForErrors() > 0) {
+////                //throw new RuntimeException("Error after prop");
+////            }
 
-            if(!success) {
-                if(propagationTries >= maxPropagationTries) {
+            if (!success) {
+                if (propagationTries >= maxPropagationTries) {
                     tries++;
                     initializeWave();
                     this.entropy = wave.stream().map(this::getEntropy).collect(Collectors.toList());
@@ -75,12 +79,68 @@ public class OverlappingModel {
             collapsedCells = (int) wave.stream().filter(l -> l.size() == 1).count();
         }
         System.out.println();
-        if(tries >= maximumTries) {
+        if (tries >= maximumTries) {
             System.out.println("No solution after " + tries + " tries.");
         } else {
             System.out.println("Success after " + tries + " tries.");
         }
+
+        //***Test****
+        int errors1 = checkForErrors();
+
+        //*********
         System.out.println(Utils.print2DArray(generateOutput()));
+    }
+
+    private boolean propagate(int cellIndex) {
+        Queue<Integer> cellsToPropagate = new LinkedList<>();
+
+        cellsToPropagate.add(cellIndex);
+        while (!cellsToPropagate.isEmpty()) {
+            int currentCell = cellsToPropagate.poll();
+
+            Vector2i cellPosition = new Vector2i(currentCell % outputSize.x, currentCell / outputSize.y);
+
+            for (int i = 0; i < Direction.values().length; i++) {
+                Direction direction = Direction.values()[i];
+                Vector2i dir = Utils.DIRECTIONS.get(i);
+
+                Vector2i neighbourPosition = new Vector2i(cellPosition).add(dir);
+                if (neighbourPosition.x < 0 || neighbourPosition.x >= outputSize.x || neighbourPosition.y < 0 || neighbourPosition.y >= outputSize.y) {
+                    continue;
+                }
+                List<Integer> neighbourCell = getWaveAt(neighbourPosition.x, neighbourPosition.y);
+
+//                if (neighbourCell.size() == 1) continue;
+
+
+                HashSet<Integer> possiblePatterns = new HashSet<>();
+                List<Integer> currentPatterns = wave.get(currentCell);
+                for (Integer pattern : currentPatterns) {
+                    List<Integer> patterns = neighbourCell.stream()
+                            .filter(neighbourPattern -> patternNeighbours[pattern].neighbours.get(direction).contains(neighbourPattern))
+                            .collect(Collectors.toList());
+                    possiblePatterns.addAll(patterns);
+                }
+
+                int neighbourIndex = neighbourPosition.x + outputSize.x * neighbourPosition.y;
+                List<Integer> newPatterns = new ArrayList<Integer>(possiblePatterns);
+                if (newPatterns.size() < neighbourCell.size()) {
+                    wave.set(neighbourIndex, newPatterns);
+                    this.entropy.set(neighbourIndex, getEntropy(neighbourIndex));
+                    cellsToPropagate.add(neighbourIndex);
+                }
+
+                if (possiblePatterns.size() == 0) {/* restart algorithm */
+//                throw new RuntimeException("no solution");
+                    return false;
+                }
+            }
+//            if (cellsToPropagate.isEmpty() && checkForErrors() > 0) {
+//                throw new RuntimeException("Error in prop");
+//            }
+        }
+        return true;
     }
 
     private void initializeWave() {
@@ -98,66 +158,23 @@ public class OverlappingModel {
     }
 
     private int[][] generateOutput() {
-        int[][] grid = new int[outputSize.y][outputSize.x];
+        int[][] grid = new int[outputSize.y + 1][outputSize.x + 1];
         for (int y = 0; y < outputSize.y; y++) {
             for (int x = 0; x < outputSize.x; x++) {
                 Pattern pattern = patterns.get(getWaveAt(x, y).get(0));
-//                grid[y][x] = getWaveAt(x, y).get(0);
                 grid[y][x] = pattern.get(0, 0);
-//                Pattern pattern = patterns.get(getWaveAt(x, y).get(0));
+                grid[y + 1][x] = pattern.get(0, 1);
+                grid[y][x + 1] = pattern.get(1, 0);
+                grid[y + 1][x + 1] = pattern.get(1, 1);
 //                int nx = x * 2;
 //                int ny = y * 2;
-//                grid.set(nx, ny, pattern.get(0, 0));
-//                grid.set(nx + 1, ny, pattern.get(1, 0));
-//                grid.set(nx, ny + 1, pattern.get(0, 1));
-//                grid.set(nx + 1, ny + 1, pattern.get(1, 1));
+//                grid[ny][nx] = pattern.get(0, 0);
+//                grid[ny + 1][nx] = pattern.get(0, 1);
+//                grid[ny][nx + 1] = pattern.get(1, 0);
+//                grid[ny + 1][nx + 1] = pattern.get(1, 1);
             }
         }
         return grid;
-    }
-
-    private boolean propagate(int cellIndex) {
-        Queue<Integer> cellsToPropagate = new LinkedList<>();
-
-        cellsToPropagate.add(cellIndex);
-        while(!cellsToPropagate.isEmpty()) {
-            int currentCell = cellsToPropagate.poll();
-            Integer pattern = wave.get(currentCell).get(0);
-
-            Vector2i cellPosition = new Vector2i(currentCell % outputSize.x, currentCell / outputSize.y);
-
-            for (int i = 0; i < Direction.values().length; i++) {
-                Direction direction = Direction.values()[i];
-                Vector2i dir = Utils.DIRECTIONS.get(i);
-
-                Vector2i neighbourPosition = new Vector2i(cellPosition).add(dir);
-                if (neighbourPosition.x < 0 || neighbourPosition.x >= outputSize.x || neighbourPosition.y < 0 || neighbourPosition.y >= outputSize.y) {
-                    continue;
-                }
-                List<Integer> neighbourCell = getWaveAt(neighbourPosition.x, neighbourPosition.y);
-
-                if (neighbourCell.size() == 1) continue;
-
-                List<Integer> possiblePatterns = neighbourCell.stream()
-                        .filter(neighbourPattern -> patternNeighbours[pattern].neighbours.get(direction).contains(neighbourPattern))
-                        .collect(Collectors.toList());
-
-                int neighbourIndex = neighbourPosition.x + outputSize.x * neighbourPosition.y;
-
-                wave.set(neighbourIndex, possiblePatterns);
-                this.entropy.set(neighbourIndex, getEntropy(neighbourIndex));
-
-                if (possiblePatterns.size() == 0) {/* restart algorithm */
-//                throw new RuntimeException("no solution");
-                    return false;
-                }
-
-                if (possiblePatterns.size() == 1) {/* cell is decided */
-                    cellsToPropagate.add(neighbourIndex);
-                }
-            }
-        }
-        return true;
     }
 
     private double getEntropy(int cellIndex) {
@@ -209,8 +226,10 @@ public class OverlappingModel {
     public void findPatterns() {
         this.patterns = new ArrayList<>();
         this.patternFrequency = new ArrayList<>();
-        for (int x = 0; x < input.size().x(); x++) {
-            for (int y = 0; y < input.size().y(); y++) {
+        int boundX = input.size().x();
+        int boundY = input.size().y();
+        for (int x = 0; x < boundX; x++) {
+            for (int y = 0; y < boundY; y++) {
                 Pattern pattern = input.getPatternAtPosition(new Vector2i(x, y), patternSize);
                 if (!patterns.contains(pattern)) {
                     patterns.add(pattern);
@@ -223,7 +242,7 @@ public class OverlappingModel {
             }
         }
 
-        int totalPatternCount = input.size().x * input.size().y;
+        int totalPatternCount = boundX * boundY;
         for (int i = 0; i < patternFrequency.size(); i++) {
             double repetitions = patternFrequency.get(i);
             patternFrequency.set(i, repetitions / totalPatternCount);
@@ -264,7 +283,7 @@ public class OverlappingModel {
                 minIndex = i;
             }
         }
-        if(minIndex == -1) {
+        if (minIndex == -1) {
             throw new RuntimeException("couldnt find lowest entropy cell.");
         }
         return minIndex;
@@ -278,14 +297,56 @@ public class OverlappingModel {
 
         double rand = Math.random() * total;
         double acc = 0;
-        for (int i = 0; i < cell.size(); i++) {
-            Double nextFrequency = frequencies.get(i);
-            if (acc >= rand && rand <= (acc + nextFrequency)) {
-                return i;
+        for (int i = 0; i < cell.size() - 1; i++) {
+            int pattern = cell.get(i);
+            acc += frequencies.get(i);
+            if (acc >= rand && rand <= (acc + frequencies.get(i + 1))) {
+                return pattern;
             }
-            acc += nextFrequency;
         }
-        return 0;
+        return cell.get(cell.size() - 1);
+    }
+
+    private int checkForErrors() {
+        AtomicInteger errors = new AtomicInteger();
+        for (int x = 0; x < outputSize.x; x++) {
+            for (int y = 0; y < outputSize.y; y++) {
+                for (int i = 0; i < 4; i++) {
+                    Direction dir = Direction.values()[i];
+                    Vector2i dirV = Utils.DIRECTIONS.get(i);
+
+                    HashSet<Integer> possiblePatternsTest = new HashSet<>();
+                    List<Integer> current = getWaveAt(x, y);
+                    for (Integer pattern : current) {
+                        possiblePatternsTest.addAll(patternNeighbours[pattern].neighbours.get(dir));
+                    }
+
+                    final int currentIndex = x + y * outputSize.x;
+
+                    int xn = x + dirV.x;
+                    int yn = y + dirV.y;
+
+                    if (xn < 0 || xn >= outputSize.x || yn < 0 || yn >= outputSize.y) continue;
+
+                    List<Integer> neighbour = getWaveAt(xn, yn);
+
+                    neighbour.forEach(p -> {
+                        for (Integer pattern : current) {
+                            if (!possiblePatternsTest.contains(p)) {
+//                                System.out.println("direction: " + dir + " pattern: ");
+//                                System.out.println(patterns.get(pattern));
+//                                System.out.println("with pattern: ");
+//                                System.out.println(patterns.get(p));
+                                System.out.println("pattern " + p + " in cell " + (xn + yn * outputSize.x) + " cant be " + dir + " of cell " + currentIndex);
+                                errors.getAndIncrement();
+                            }
+                        }
+                    });
+                }
+            }
+        }
+        if (errors.get() > 0) System.out.println("neighbour constraints not satisfied: " + errors + " errors.");
+        return errors.get();
     }
 
     class Neighbours {

@@ -22,11 +22,13 @@ public class OverlappingModelTest {
             {0, 0, 0, 0},
             {1, 1, 0, 1},
             {0, 0, 0, 0},
+            {0, 0, 0, 0},
     };
     private int[][] input3 = new int[][]{
-            {1, 2, 1},
-            {2, 0, 2},
-            {1, 2, 1},
+            {0, 0, 0, 0},
+            {0, 2, 2, 2},
+            {0, 2, 1, 2},
+            {0 ,2, 2, 2},
     };
 
     OverlappingModel overlappingModel1;
@@ -37,7 +39,7 @@ public class OverlappingModelTest {
     public void setUp() throws Exception {
         overlappingModel1 = new OverlappingModel(input, 2, new Vector2i(10, 10));
         overlappingModel2 = new OverlappingModel(input2, 2, new Vector2i(10, 10));
-        overlappingModel3 = new OverlappingModel(input3, 2, new Vector2i(10,10));
+        overlappingModel3 = new OverlappingModel(input3, 2, new Vector2i(20,20));
     }
 
     @Test
@@ -117,7 +119,7 @@ public class OverlappingModelTest {
 
     @Test
     public void solveTest() {
-        OverlappingModel overlappingModel = this.overlappingModel2;
+        OverlappingModel overlappingModel = this.overlappingModel3;
         overlappingModel.solve();
         List<List<Integer>> wave = overlappingModel.wave;
         for (int y = 0; y < overlappingModel.outputSize.y; y++) {
