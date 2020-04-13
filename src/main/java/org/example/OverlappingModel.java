@@ -12,7 +12,7 @@ public class OverlappingModel {
     private Grid input;
     private int patternSize;
     private int maximumTries = 100000;
-    private int maxPropagationTries = 10;
+    private int maxPropagationTries = 0;
 
     public List<Pattern> patterns;
 
@@ -38,7 +38,7 @@ public class OverlappingModel {
         findNeighbours();
     }
 
-    public void solve() {
+    public int[][] solve() {
         initializeWave();
         baseEntropy = getEntropy(0);
         int collapsedCells = 0;
@@ -89,7 +89,9 @@ public class OverlappingModel {
         int errors1 = checkForErrors();
 
         //*********
-        System.out.println(Utils.print2DArray(generateOutput()));
+        int[][] array = generateOutput();
+        System.out.println(Utils.print2DArray(array));
+        return array;
     }
 
     private boolean propagate(int cellIndex) {
@@ -163,9 +165,9 @@ public class OverlappingModel {
             for (int x = 0; x < outputSize.x; x++) {
                 Pattern pattern = patterns.get(getWaveAt(x, y).get(0));
                 grid[y][x] = pattern.get(0, 0);
-                grid[y + 1][x] = pattern.get(0, 1);
-                grid[y][x + 1] = pattern.get(1, 0);
-                grid[y + 1][x + 1] = pattern.get(1, 1);
+//                grid[y + 1][x] = pattern.get(0, 1);
+//                grid[y][x + 1] = pattern.get(1, 0);
+//                grid[y + 1][x + 1] = pattern.get(1, 1);
 //                int nx = x * 2;
 //                int ny = y * 2;
 //                grid[ny][nx] = pattern.get(0, 0);

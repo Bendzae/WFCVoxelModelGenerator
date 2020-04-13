@@ -14,6 +14,7 @@ import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Transform;
 import javafx.stage.Stage;
+import org.joml.Vector2i;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ public class App extends Application {
 
     private static final int WIDTH = 700;
     private static final int HEIGHT = 700;
-    private static final int BOX_SIZE = 10;
+    private static final int BOX_SIZE = 5;
 
     private double anchorX, anchorY;
     private double anchorAngleX = 0;
@@ -35,32 +36,27 @@ public class App extends Application {
     private final DoubleProperty angleX = new SimpleDoubleProperty(0);
     private final DoubleProperty angleY = new SimpleDoubleProperty(0);
     private static Scene scene;
+    private List<Color> colors = List.of(Color.WHITE, Color.RED, Color.BLACK, Color.BLUE);
+
+    private int[][] input3 = new int[][]{
+            {0, 0, 0, 0, 0},
+            {0, 2, 2, 2, 0},
+            {0, 2, 1, 2, 0},
+            {0 ,2, 2, 2, 0},
+            {0 ,0, 0, 0, 0},
+    };
 
     @Override
     public void start(Stage stage) throws IOException {
 
         final int size = 20;
 
-        int[][][] voxelArray = new int[size][size][size];
-
-//        voxelArray[0][0][0] = 1;
-//        voxelArray[2][1][0] = 1;
-//        voxelArray[1][2][1] = 1;
-//        voxelArray[1][1][0] = 1;
-
-         int r = 7;
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
-                for (int z = 0; z < size; z++) {
-                    if(Math.pow(x - size / 2, 2) + Math.pow(y - size / 2, 2) + Math.pow(z - size / 2, 2) < r * r) voxelArray[x][y][z] = 1;
-                }
-            }
-        }
-
         Group root = new Group();
         SmartGroup boxes = new SmartGroup();
 
-        boxes.getChildren().addAll(createBoxesFromVoxelArray(voxelArray));
+        OverlappingModel overlappingModel = new OverlappingModel(input3, 2, new Vector2i(50,50));
+
+        boxes.getChildren().addAll(createBoxesFrom2DArray(overlappingModel.solve()));
 
 
         root.getChildren().add(boxes);
@@ -86,7 +82,7 @@ public class App extends Application {
         for (int x = 0; x < size; x++) {
             for (int y = 0; y < size; y++) {
                 for (int z = 0; z < size; z++) {
-                    if (voxelModel[x][y][z] != 0) {
+//                    if (voxelModel[x][y][z] != 0) {
                         Box box = new Box(BOX_SIZE * 0.9f, BOX_SIZE * 0.9f, BOX_SIZE * 0.9f);
                         box.translateXProperty().setValue(BOX_SIZE * (x - (size/2)));
                         box.translateYProperty().setValue(BOX_SIZE * (y - (size/2)));
@@ -95,8 +91,28 @@ public class App extends Application {
                         phongMaterial.setDiffuseColor(Color.color(Math.random(), Math.random(), Math.random()));
                         box.setMaterial(phongMaterial);
                         result.add(box);
-                    }
+//                    }
                 }
+            }
+        }
+        return result;
+    }
+
+    private List<Box> createBoxesFrom2DArray(int[][] voxelModel) {
+        List<Box> result = new ArrayList<>();
+        int size = voxelModel.length;
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+//                    if (voxelModel[y][x] != 0) {
+                        Box box = new Box(BOX_SIZE * 0.9f, BOX_SIZE * 0.9f, BOX_SIZE * 0.9f);
+                        box.translateXProperty().setValue(BOX_SIZE * (x - (size/2)));
+                        box.translateZProperty().setValue(0);
+                        box.translateYProperty().setValue(BOX_SIZE * (y - (size/2)));
+                        final PhongMaterial phongMaterial = new PhongMaterial();
+                        phongMaterial.setDiffuseColor(colors.get(voxelModel[y][x]));
+                        box.setMaterial(phongMaterial);
+                        result.add(box);
+//                    }
             }
         }
         return result;
