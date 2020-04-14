@@ -1,6 +1,10 @@
 package org.example;
 
+import org.joml.Matrix2d;
 import org.joml.Vector2i;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Grid {
     private int[][] grid;
@@ -23,6 +27,7 @@ public class Grid {
     public int get(Vector2i position) {
         return get(position.x(), position.y());
     }
+
     public int get(int x, int y) {
         checkBounds(x, y);
         return grid[y][x];
@@ -41,8 +46,9 @@ public class Grid {
     public void set(Vector2i position, int value) {
         set(position.x(), position.y(), value);
     }
+
     public void set(int x, int y, int value) {
-        checkBounds(x,y);
+        checkBounds(x, y);
         grid[y][x] = value;
     }
 
@@ -54,6 +60,44 @@ public class Grid {
             }
         }
         return pattern;
+    }
+
+    public List<Pattern> getRotatedPatterns(Pattern pattern) {
+        List<Pattern> rotatedPatterns = new ArrayList<>();
+        int size = pattern.getSize();
+        Pattern current = pattern;
+        for (int i = 0; i < 3; i++) {
+            Pattern rotated = new Pattern(size);
+            for (int x = 0; x < size; ++x) {
+                for (int y = 0; y < size; ++y) {
+                    rotated.set(x, y, current.get(y, size - x - 1));
+                }
+            }
+            current = rotated;
+            rotatedPatterns.add(rotated);
+        }
+        return rotatedPatterns;
+    }
+
+    public List<Pattern> getReflectedPatterns(Pattern pattern) {
+        List<Pattern> reflectedPatterns = new ArrayList<>();
+        int size = pattern.getSize();
+        Pattern reflectedY = new Pattern(size);
+        for (int x = 0; x < size; ++x) {
+            for (int y = 0; y < size; ++y) {
+                reflectedY.set(x, y, pattern.get(x, size - y - 1));
+            }
+        }
+        reflectedPatterns.add(reflectedY);
+
+        Pattern reflectedX = new Pattern(size);
+        for (int x = 0; x < size; ++x) {
+            for (int y = 0; y < size; ++y) {
+                reflectedX.set(x, y, pattern.get(size - x - 1, y));
+            }
+        }
+        reflectedPatterns.add(reflectedX);
+        return reflectedPatterns;
     }
 
     private void checkBounds(int x, int y) {

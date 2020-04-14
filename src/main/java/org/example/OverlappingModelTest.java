@@ -40,7 +40,7 @@ public class OverlappingModelTest {
     public void setUp() throws Exception {
         overlappingModel1 = new OverlappingModel(input, 2, new Vector2i(10, 10));
         overlappingModel2 = new OverlappingModel(input2, 2, new Vector2i(10, 10));
-        overlappingModel3 = new OverlappingModel(input3, 2, new Vector2i(20,20));
+        overlappingModel3 = new OverlappingModel(input3, 3, new Vector2i(20,20));
     }
 
     @Test
@@ -134,6 +134,30 @@ public class OverlappingModelTest {
             System.out.println("index: " + i);
             System.out.println(overlappingModel.patterns.get(i));
         }
+    }
+
+    @Test
+    public void rotateTest() {
+        Grid grid = new Grid(new Vector2i(10,10));
+        Pattern p = new Pattern(3, new int[][] {
+                {1,2,3},
+                {0,0,0},
+                {0,0,0}
+        });
+        System.out.println(p);
+        grid.getRotatedPatterns(p).forEach(System.out::println);
+    }
+
+    @Test
+    public void reflectTest() {
+        Grid grid = new Grid(new Vector2i(10,10));
+        Pattern p = new Pattern(3, new int[][] {
+                {1,2,3},
+                {0,0,0},
+                {0,0,0}
+        });
+        System.out.println(p);
+        grid.getReflectedPatterns(p).forEach(System.out::println);
     }
 
     @Test

@@ -39,11 +39,23 @@ public class App extends Application {
     private List<Color> colors = List.of(Color.WHITE, Color.RED, Color.BLACK, Color.BLUE);
 
     private int[][] input3 = new int[][]{
-            {0, 0, 0, 0, 0},
-            {0, 2, 2, 2, 0},
-            {0, 2, 1, 2, 0},
-            {0 ,2, 2, 2, 0},
-            {0 ,0, 0, 0, 0},
+            {0, 0, 0, 0},
+            {0, 2, 2, 2},
+            {0, 2, 1, 2},
+            {0 ,2, 2, 2},
+    };
+
+    private int[][] input = new int[][]{
+            {0, 0, 0},
+            {0, 2, 2},
+            {0, 2, 0},
+    };
+
+    private int[][] input2 = new int[][]{
+            {0, 2, 2, 0},
+            {2, 1, 1, 2},
+            {0, 2, 2, 0},
+            {0, 0, 0, 0},
     };
 
     @Override
@@ -54,7 +66,7 @@ public class App extends Application {
         Group root = new Group();
         SmartGroup boxes = new SmartGroup();
 
-        OverlappingModel overlappingModel = new OverlappingModel(input3, 2, new Vector2i(50,50));
+        OverlappingModel overlappingModel = new OverlappingModel(input3, 2, new Vector2i(30,30));
 
         boxes.getChildren().addAll(createBoxesFrom2DArray(overlappingModel.solve()));
 

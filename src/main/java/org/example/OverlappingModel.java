@@ -11,6 +11,8 @@ public class OverlappingModel {
 
     private Grid input;
     private int patternSize;
+    private boolean rotation = true;
+    private boolean symmetry = true;
     private int maximumTries = 100000;
     private int maxPropagationTries = 0;
 
@@ -160,11 +162,18 @@ public class OverlappingModel {
     }
 
     private int[][] generateOutput() {
-        int[][] grid = new int[outputSize.y + 1][outputSize.x + 1];
+        int sizeFactor = patternSize - 1;
+        int sizeX = outputSize.x * sizeFactor + 1;
+        int sizeY = outputSize.y * sizeFactor + 1;
+        int[][] grid = new int[sizeX][sizeY];
         for (int y = 0; y < outputSize.y; y++) {
             for (int x = 0; x < outputSize.x; x++) {
                 Pattern pattern = patterns.get(getWaveAt(x, y).get(0));
-                grid[y][x] = pattern.get(0, 0);
+                for (int px = 0; px < patternSize; px++) {
+                    for (int py = 0; py < patternSize; py++) {
+                        grid[y * sizeFactor + py][x * sizeFactor + px] = pattern.get(px,py);
+                    }
+                }
 //                grid[y + 1][x] = pattern.get(0, 1);
 //                grid[y][x + 1] = pattern.get(1, 0);
 //                grid[y + 1][x + 1] = pattern.get(1, 1);
@@ -232,14 +241,24 @@ public class OverlappingModel {
         int boundY = input.size().y();
         for (int x = 0; x < boundX; x++) {
             for (int y = 0; y < boundY; y++) {
-                Pattern pattern = input.getPatternAtPosition(new Vector2i(x, y), patternSize);
-                if (!patterns.contains(pattern)) {
-                    patterns.add(pattern);
-                    patternFrequency.add(1d);
-                } else {
-                    int patternIndex = patterns.indexOf(pattern);
-                    Double patternFrequency = this.patternFrequency.get(patternIndex);
-                    this.patternFrequency.set(patternIndex, patternFrequency + 1);
+                ArrayList<Pattern> patterns = new ArrayList<>();
+                Pattern currentPattern = input.getPatternAtPosition(new Vector2i(x, y), patternSize);
+                patterns.add(currentPattern);
+                if (rotation) {
+                    patterns.addAll(input.getRotatedPatterns(currentPattern));
+                }
+                if (symmetry) {
+                    patterns.addAll(input.getReflectedPatterns(currentPattern));
+                }
+                for (Pattern pattern : patterns) {
+                    if (!this.patterns.contains(pattern)) {
+                        this.patterns.add(pattern);
+                        patternFrequency.add(1d);
+                    } else {
+                        int patternIndex = this.patterns.indexOf(pattern);
+                        Double patternFrequency = this.patternFrequency.get(patternIndex);
+                        this.patternFrequency.set(patternIndex, patternFrequency + 1);
+                    }
                 }
             }
         }
@@ -274,6 +293,10 @@ public class OverlappingModel {
                 }
             }
         }
+    }
+
+    private void findNeighboursStrict() {
+
     }
 
     private int getLowestEntropyCell() {

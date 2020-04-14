@@ -25,6 +25,10 @@ public class Pattern {
         return values[y][x];
     }
 
+    public int getSize() {
+        return size;
+    }
+
     public int[] getEdge(Direction direction) {
         int[] edge = new int[size];
         switch (direction) {
