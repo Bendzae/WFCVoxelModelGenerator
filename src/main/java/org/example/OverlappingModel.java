@@ -115,9 +115,6 @@ public class OverlappingModel {
                 }
                 List<Integer> neighbourCell = getWaveAt(neighbourPosition.x, neighbourPosition.y);
 
-//                if (neighbourCell.size() == 1) continue;
-
-
                 HashSet<Integer> possiblePatterns = new HashSet<>();
                 List<Integer> currentPatterns = wave.get(currentCell);
                 for (Integer pattern : currentPatterns) {
@@ -136,13 +133,9 @@ public class OverlappingModel {
                 }
 
                 if (possiblePatterns.size() == 0) {/* restart algorithm */
-//                throw new RuntimeException("no solution");
                     return false;
                 }
             }
-//            if (cellsToPropagate.isEmpty() && checkForErrors() > 0) {
-//                throw new RuntimeException("Error in prop");
-//            }
         }
         return true;
     }
@@ -174,15 +167,6 @@ public class OverlappingModel {
                         grid[y * sizeFactor + py][x * sizeFactor + px] = pattern.get(px,py);
                     }
                 }
-//                grid[y + 1][x] = pattern.get(0, 1);
-//                grid[y][x + 1] = pattern.get(1, 0);
-//                grid[y + 1][x + 1] = pattern.get(1, 1);
-//                int nx = x * 2;
-//                int ny = y * 2;
-//                grid[ny][nx] = pattern.get(0, 0);
-//                grid[ny + 1][nx] = pattern.get(0, 1);
-//                grid[ny][nx + 1] = pattern.get(1, 0);
-//                grid[ny + 1][nx + 1] = pattern.get(1, 1);
             }
         }
         return grid;
