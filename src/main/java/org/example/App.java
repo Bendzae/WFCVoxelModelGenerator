@@ -4,8 +4,14 @@ import javafx.application.Application;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.*;
+import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
@@ -37,12 +43,13 @@ public class App extends Application {
     private final DoubleProperty angleY = new SimpleDoubleProperty(0);
     private static Scene scene;
     private List<Color> colors = List.of(Color.WHITE, Color.RED, Color.BLACK, Color.BLUE);
+    private int currentColor = 0;
 
     private int[][] input3 = new int[][]{
             {0, 0, 0, 0},
             {0, 2, 2, 2},
             {0, 2, 1, 2},
-            {0 ,2, 2, 2},
+            {0, 2, 2, 2},
     };
 
     private int[][] input = new int[][]{
@@ -58,17 +65,29 @@ public class App extends Application {
             {0, 0, 0, 0},
     };
 
+    int[][] inputArray;
+    private SmartGroup boxes;
+
     @Override
     public void start(Stage stage) throws IOException {
 
         final int size = 20;
-
         Group root = new Group();
-        SmartGroup boxes = new SmartGroup();
+        boxes = new SmartGroup();
 
-        OverlappingModel overlappingModel = new OverlappingModel(input3, 2, new Vector2i(30,30));
+//        OverlappingModel overlappingModel = new OverlappingModel(input3, 2, new Vector2i(30,30));
+//
+//        boxes.getChildren().addAll(createBoxesFrom2DArray(overlappingModel.solve()));
 
-        boxes.getChildren().addAll(createBoxesFrom2DArray(overlappingModel.solve()));
+        VBox vBox = new VBox();
+        vBox.setStyle("-fx-background-color: #336699;");
+        vBox.setPadding(new Insets(10));
+        vBox.setSpacing(8);
+        Label hello = new Label("Hello");
+        vBox.getChildren().add(hello);
+        root.getChildren().add(vBox);
+
+        initPatternEditor();
 
 
         root.getChildren().add(boxes);
@@ -81,11 +100,67 @@ public class App extends Application {
         scene.setFill(Color.BLACK.brighter().brighter());
         scene.setCamera(camera);
 
+        scene.setOnKeyPressed(keyEvent -> {
+            System.out.println(keyEvent.getCode());
+            if (keyEvent.getCode().equals(KeyCode.ENTER)) {
+                boxes.getChildren().clear();
+                OverlappingModel overlappingModel = new OverlappingModel(inputArray, 2, new Vector2i(30, 30));
+                boxes.getChildren().addAll(createBoxesFrom2DArray(overlappingModel.solve()));
+            } else if (keyEvent.getCode().equals(KeyCode.BACK_SPACE)) {
+                initPatternEditor();
+            } else if (keyEvent.getCode().equals(KeyCode.D)) {
+                boxes.getChildren().clear();
+            }
+        });
+
         initMouseControl(boxes, scene);
 
-//        scene = new Scene(loadFXML("primary"));
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void initPatternEditor() {
+        int inputX = 5;
+        int inputY = 5;
+
+        boxes.getChildren().clear();
+        inputArray = new int[inputY][inputX];
+
+        for (int i = 0; i < colors.size(); i++) {
+            Box box = new Box(BOX_SIZE * 2, BOX_SIZE * 2, BOX_SIZE * 2);
+            box.translateXProperty().setValue(- BOX_SIZE * inputX);
+            box.translateZProperty().setValue(0);
+            box.translateYProperty().setValue(BOX_SIZE * 2.1 * i);
+            final PhongMaterial phongMaterial = new PhongMaterial();
+            phongMaterial.setDiffuseColor(colors.get(i));
+            box.setMaterial(phongMaterial);
+            box.setUserData(i);
+            box.setOnMouseClicked(mouseEvent -> {
+                currentColor = (int) box.getUserData();
+            });
+            boxes.getChildren().add(box);
+        }
+
+
+
+        for (int x = 0; x < inputX; x++) {
+            for (int y = 0; y < inputY; y++) {
+                inputArray[y][x] = 0;
+                Box box = new Box(BOX_SIZE * 0.9f, BOX_SIZE * 0.9f, BOX_SIZE * 0.9f);
+                box.translateXProperty().setValue(BOX_SIZE * (x - (inputX / 2)));
+                box.translateZProperty().setValue(0);
+                box.translateYProperty().setValue(BOX_SIZE * (y - (inputY / 2)));
+                box.setUserData(new Vector2i(x, y));
+                box.setOnMouseClicked(mouseEvent -> {
+                    final PhongMaterial phongMaterial = new PhongMaterial();
+                    phongMaterial.setDiffuseColor(colors.get(currentColor));
+                    box.setMaterial(phongMaterial);
+                    Vector2i userData = (Vector2i) box.getUserData();
+                    inputArray[userData.y][userData.x] = currentColor;
+                });
+                boxes.getChildren().add(box);
+            }
+        }
     }
 
     private List<Box> createBoxesFromVoxelArray(int[][][] voxelModel) {
@@ -95,14 +170,14 @@ public class App extends Application {
             for (int y = 0; y < size; y++) {
                 for (int z = 0; z < size; z++) {
 //                    if (voxelModel[x][y][z] != 0) {
-                        Box box = new Box(BOX_SIZE * 0.9f, BOX_SIZE * 0.9f, BOX_SIZE * 0.9f);
-                        box.translateXProperty().setValue(BOX_SIZE * (x - (size/2)));
-                        box.translateYProperty().setValue(BOX_SIZE * (y - (size/2)));
-                        box.translateZProperty().setValue(BOX_SIZE * (z - (size/2)));
-                        final PhongMaterial phongMaterial = new PhongMaterial();
-                        phongMaterial.setDiffuseColor(Color.color(Math.random(), Math.random(), Math.random()));
-                        box.setMaterial(phongMaterial);
-                        result.add(box);
+                    Box box = new Box(BOX_SIZE * 0.9f, BOX_SIZE * 0.9f, BOX_SIZE * 0.9f);
+                    box.translateXProperty().setValue(BOX_SIZE * (x - (size / 2)));
+                    box.translateYProperty().setValue(BOX_SIZE * (y - (size / 2)));
+                    box.translateZProperty().setValue(BOX_SIZE * (z - (size / 2)));
+                    final PhongMaterial phongMaterial = new PhongMaterial();
+                    phongMaterial.setDiffuseColor(Color.color(Math.random(), Math.random(), Math.random()));
+                    box.setMaterial(phongMaterial);
+                    result.add(box);
 //                    }
                 }
             }
@@ -116,14 +191,14 @@ public class App extends Application {
         for (int x = 0; x < size; x++) {
             for (int y = 0; y < size; y++) {
 //                    if (voxelModel[y][x] != 0) {
-                        Box box = new Box(BOX_SIZE * 0.9f, BOX_SIZE * 0.9f, BOX_SIZE * 0.9f);
-                        box.translateXProperty().setValue(BOX_SIZE * (x - (size/2)));
-                        box.translateZProperty().setValue(0);
-                        box.translateYProperty().setValue(BOX_SIZE * (y - (size/2)));
-                        final PhongMaterial phongMaterial = new PhongMaterial();
-                        phongMaterial.setDiffuseColor(colors.get(voxelModel[y][x]));
-                        box.setMaterial(phongMaterial);
-                        result.add(box);
+                Box box = new Box(BOX_SIZE * 0.9f, BOX_SIZE * 0.9f, BOX_SIZE * 0.9f);
+                box.translateXProperty().setValue(BOX_SIZE * (x - (size / 2)));
+                box.translateZProperty().setValue(0);
+                box.translateYProperty().setValue(BOX_SIZE * (y - (size / 2)));
+                final PhongMaterial phongMaterial = new PhongMaterial();
+                phongMaterial.setDiffuseColor(colors.get(voxelModel[y][x]));
+                box.setMaterial(phongMaterial);
+                result.add(box);
 //                    }
             }
         }
