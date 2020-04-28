@@ -145,6 +145,8 @@ public class App extends Application {
         generateButton.setOnAction(actionEvent -> generate());
         Button editInputButton = new Button("Edit Input");
         editInputButton.setOnAction(actionEvent -> initPatternEditor());
+        Button clearInputButton = new Button("Clear");
+        clearInputButton.setOnAction(actionEvent -> clearInput());
 
         menu.getChildren().addAll(
                 colorLabel,
@@ -158,7 +160,8 @@ public class App extends Application {
                 rotationCheckBox,
                 symmetryCheckBox,
                 generateButton,
-                editInputButton
+                editInputButton,
+                clearInputButton
         );
 
         parent.setLeft(menu);
