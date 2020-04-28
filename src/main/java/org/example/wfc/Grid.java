@@ -1,6 +1,5 @@
-package org.example;
+package org.example.wfc;
 
-import org.joml.Matrix2d;
 import org.joml.Vector2i;
 
 import java.util.ArrayList;

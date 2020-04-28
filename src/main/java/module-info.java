@@ -5,5 +5,5 @@ module org.example {
     requires org.joml;
 
     opens org.example to javafx.fxml;
-    exports org.example;
+    exports org.example.ui;
 }

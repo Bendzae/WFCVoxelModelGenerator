@@ -1,4 +1,4 @@
-package org.example;
+package org.example.wfc;
 
 public enum Direction {
     LEFT,

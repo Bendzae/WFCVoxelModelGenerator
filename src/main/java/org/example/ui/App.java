@@ -1,4 +1,4 @@
-package org.example;
+package org.example.ui;
 
 import javafx.application.Application;
 import javafx.beans.property.DoubleProperty;
@@ -9,27 +9,22 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
-import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Transform;
 import javafx.stage.Stage;
+import org.example.wfc.OverlappingModel;
 import org.joml.Vector2i;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
 
 /**
  * JavaFX App
@@ -100,7 +95,7 @@ public class App extends Application {
                 if (intValue > inputMaxSize) intValue = inputMaxSize;
                 inputSizeTextField.setText(String.valueOf(intValue));
                 inputSize = new Vector2i(intValue, intValue);
-                if(applicationState == ApplicationState.EDIT) clearInput();
+                if (applicationState == ApplicationState.EDIT) clearInput();
             }
         });
         inputSizeTextField.setText(String.valueOf(inputSize.x));
@@ -214,13 +209,13 @@ public class App extends Application {
         int inputY = inputSize.y;
 
         boxes.getChildren().clear();
-        if(inputArray == null) inputArray = new int[inputY][inputX];
+        if (inputArray == null) inputArray = new int[inputY][inputX];
 
         double zoomedBoxSize = (BOX_SIZE * 5);
 
         for (int x = 0; x < inputX; x++) {
             for (int y = 0; y < inputY; y++) {
-                if(inputArray == null) inputArray[y][x] = 0;
+                if (inputArray == null) inputArray[y][x] = 0;
                 Box box = new Box(zoomedBoxSize * 0.9f, zoomedBoxSize * 0.9f, zoomedBoxSize * 0.9f);
                 box.translateXProperty().setValue(zoomedBoxSize * (x - (inputX / 2)));
                 box.translateZProperty().setValue(0);

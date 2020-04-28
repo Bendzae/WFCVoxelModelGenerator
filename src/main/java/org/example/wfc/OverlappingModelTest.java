@@ -1,4 +1,4 @@
-package org.example;
+package org.example.wfc;
 
 
 import org.joml.Vector2i;

@@ -1,4 +1,4 @@
-package org.example;
+package org.example.wfc;
 
 import java.util.Arrays;
 import java.util.Objects;
