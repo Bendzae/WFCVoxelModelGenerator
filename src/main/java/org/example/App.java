@@ -100,7 +100,7 @@ public class App extends Application {
                 if (intValue > inputMaxSize) intValue = inputMaxSize;
                 inputSizeTextField.setText(String.valueOf(intValue));
                 inputSize = new Vector2i(intValue, intValue);
-                if(applicationState == ApplicationState.EDIT) initPatternEditor();
+                if(applicationState == ApplicationState.EDIT) clearInput();
             }
         });
         inputSizeTextField.setText(String.valueOf(inputSize.x));
@@ -122,7 +122,7 @@ public class App extends Application {
 
         Label patternSizeLabel = new Label("Pattern Size:");
         TextField patternSizeTextField = new TextField();
-        int patternMaxSize = 5;
+        int patternMaxSize = 10;
         patternSizeTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.matches("\\d{0,10}")) {
                 patternSizeTextField.setText(oldValue);
@@ -211,19 +211,19 @@ public class App extends Application {
         int inputY = inputSize.y;
 
         boxes.getChildren().clear();
-        inputArray = new int[inputY][inputX];
+        if(inputArray == null) inputArray = new int[inputY][inputX];
 
         double zoomedBoxSize = (BOX_SIZE * 5);
 
         for (int x = 0; x < inputX; x++) {
             for (int y = 0; y < inputY; y++) {
-                inputArray[y][x] = 0;
+                if(inputArray == null) inputArray[y][x] = 0;
                 Box box = new Box(zoomedBoxSize * 0.9f, zoomedBoxSize * 0.9f, zoomedBoxSize * 0.9f);
                 box.translateXProperty().setValue(zoomedBoxSize * (x - (inputX / 2)));
                 box.translateZProperty().setValue(0);
                 box.translateYProperty().setValue(zoomedBoxSize * (y - (inputY / 2)));
                 final PhongMaterial phongMaterial = new PhongMaterial();
-                phongMaterial.setDiffuseColor(colors.get(0));
+                phongMaterial.setDiffuseColor(colors.get(inputArray[y][x]));
                 box.setMaterial(phongMaterial);
                 box.setUserData(new Vector2i(x, y));
                 box.setOnMouseClicked(mouseEvent -> {
@@ -236,6 +236,11 @@ public class App extends Application {
                 boxes.getChildren().add(box);
             }
         }
+    }
+
+    private void clearInput() {
+        inputArray = null;
+        initPatternEditor();
     }
 
     private List<Box> createBoxesFromVoxelArray(int[][][] voxelModel) {
