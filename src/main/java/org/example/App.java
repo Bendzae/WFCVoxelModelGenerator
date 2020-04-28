@@ -3,15 +3,18 @@ package org.example;
 import javafx.application.Application;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.*;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
@@ -26,13 +29,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /**
  * JavaFX App
  */
 public class App extends Application {
 
-    private static final int WIDTH = 700;
+    private enum ApplicationState {
+        EDIT,
+        VIEW
+    }
+
+    private ApplicationState applicationState = ApplicationState.EDIT;
+
+    private static final int WIDTH = 900;
     private static final int HEIGHT = 700;
     private static final int BOX_SIZE = 5;
 
@@ -42,28 +53,15 @@ public class App extends Application {
     private final DoubleProperty angleX = new SimpleDoubleProperty(0);
     private final DoubleProperty angleY = new SimpleDoubleProperty(0);
     private static Scene scene;
+
+    //WFC Parameters
     private List<Color> colors = List.of(Color.WHITE, Color.RED, Color.BLACK, Color.BLUE);
     private int currentColor = 0;
-
-    private int[][] input3 = new int[][]{
-            {0, 0, 0, 0},
-            {0, 2, 2, 2},
-            {0, 2, 1, 2},
-            {0, 2, 2, 2},
-    };
-
-    private int[][] input = new int[][]{
-            {0, 0, 0},
-            {0, 2, 2},
-            {0, 2, 0},
-    };
-
-    private int[][] input2 = new int[][]{
-            {0, 2, 2, 0},
-            {2, 1, 1, 2},
-            {0, 2, 2, 0},
-            {0, 0, 0, 0},
-    };
+    private boolean rotation = false;
+    private boolean symmetry = false;
+    private int patternSize = 2;
+    private Vector2i inputSize = new Vector2i(5, 5);
+    private Vector2i outputSize = new Vector2i(30, 30);
 
     int[][] inputArray;
     private SmartGroup boxes;
@@ -71,41 +69,122 @@ public class App extends Application {
     @Override
     public void start(Stage stage) throws IOException {
 
-        final int size = 20;
-        Group root = new Group();
+        //Root Element
+        BorderPane parent = new BorderPane();
+
+        //Left Menu
+        VBox menu = new VBox();
+        menu.setSpacing(10);
+        menu.setPadding(new Insets(10));
+
+        //Color Label
+        Label colorLabel = new Label("Color:");
+
+        //Color Picker
+        ObservableList<Color> options = FXCollections.observableArrayList(colors);
+        final ComboBox<Color> comboBox = new ComboBox<Color>(options);
+        comboBox.setCellFactory(c -> new ColorListCell());
+        comboBox.setButtonCell(new ColorListCell());
+        comboBox.getSelectionModel().selectFirst();
+        comboBox.setOnAction(actionEvent -> currentColor = colors.indexOf(comboBox.getValue()));
+
+        //Parameters
+        Label inputSizeLabel = new Label("Input Size:");
+        TextField inputSizeTextField = new TextField();
+        int inputMaxSize = 9;
+        inputSizeTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d{0,10}")) {
+                inputSizeTextField.setText(oldValue);
+            } else {
+                int intValue = Integer.parseInt(newValue);
+                if (intValue > inputMaxSize) intValue = inputMaxSize;
+                inputSizeTextField.setText(String.valueOf(intValue));
+                inputSize = new Vector2i(intValue, intValue);
+                if(applicationState == ApplicationState.EDIT) initPatternEditor();
+            }
+        });
+        inputSizeTextField.setText(String.valueOf(inputSize.x));
+
+        Label outputSizeLabel = new Label("Output Size:");
+        TextField outputSizeTextField = new TextField();
+        int outputMaxSize = 100;
+        outputSizeTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d{0,10}")) {
+                outputSizeTextField.setText(oldValue);
+            } else {
+                int intValue = Integer.parseInt(newValue);
+                if (intValue > outputMaxSize) intValue = outputMaxSize;
+                outputSizeTextField.setText(String.valueOf(intValue));
+                outputSize = new Vector2i(intValue, intValue);
+            }
+        });
+        outputSizeTextField.setText(String.valueOf(outputSize.x));
+
+        Label patternSizeLabel = new Label("Pattern Size:");
+        TextField patternSizeTextField = new TextField();
+        int patternMaxSize = 5;
+        patternSizeTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d{0,10}")) {
+                patternSizeTextField.setText(oldValue);
+            } else {
+                int intValue = Integer.parseInt(newValue);
+                if (intValue > patternMaxSize) intValue = patternMaxSize;
+                patternSizeTextField.setText(String.valueOf(intValue));
+                patternSize = intValue;
+            }
+        });
+        patternSizeTextField.setText(String.valueOf(patternSize));
+
+        CheckBox rotationCheckBox = new CheckBox("Rotation");
+        rotationCheckBox.setOnAction(actionEvent -> rotation = rotationCheckBox.isSelected());
+        CheckBox symmetryCheckBox = new CheckBox("Symmetry");
+        symmetryCheckBox.setOnAction(actionEvent -> symmetry = symmetryCheckBox.isSelected());
+
+        //Buttons
+        Button generateButton = new Button("Generate");
+        generateButton.setOnAction(actionEvent -> generate());
+        Button editInputButton = new Button("Edit Input");
+        editInputButton.setOnAction(actionEvent -> initPatternEditor());
+
+        menu.getChildren().addAll(
+                colorLabel,
+                comboBox,
+                inputSizeLabel,
+                inputSizeTextField,
+                outputSizeLabel,
+                outputSizeTextField,
+                patternSizeLabel,
+                patternSizeTextField,
+                rotationCheckBox,
+                symmetryCheckBox,
+                generateButton,
+                editInputButton
+        );
+
+        parent.setLeft(menu);
+
         boxes = new SmartGroup();
 
-//        OverlappingModel overlappingModel = new OverlappingModel(input3, 2, new Vector2i(30,30));
-//
-//        boxes.getChildren().addAll(createBoxesFrom2DArray(overlappingModel.solve()));
-
-        VBox vBox = new VBox();
-        vBox.setStyle("-fx-background-color: #336699;");
-        vBox.setPadding(new Insets(10));
-        vBox.setSpacing(8);
-        Label hello = new Label("Hello");
-        vBox.getChildren().add(hello);
-        root.getChildren().add(vBox);
+        int w1 = WIDTH - 100;
+        int h1 = HEIGHT;
+        SubScene subScene = new SubScene(boxes, w1, h1, true, SceneAntialiasing.BALANCED);
+        Camera camera = new PerspectiveCamera();
+        camera.translateXProperty().setValue(-w1 / 2);
+        camera.translateYProperty().setValue(-h1 / 2);
+        camera.translateZProperty().setValue(w1);
+        subScene.setFill(Color.BLACK.brighter().brighter());
+        subScene.setCamera(camera);
 
         initPatternEditor();
 
+        parent.setRight(subScene);
 
-        root.getChildren().add(boxes);
-
-        Camera camera = new PerspectiveCamera();
-        camera.translateXProperty().setValue(-WIDTH / 2);
-        camera.translateYProperty().setValue(-HEIGHT / 2);
-        camera.translateZProperty().setValue(WIDTH);
-        scene = new Scene(root, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
-        scene.setFill(Color.BLACK.brighter().brighter());
-        scene.setCamera(camera);
+        scene = new Scene(parent, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
 
         scene.setOnKeyPressed(keyEvent -> {
             System.out.println(keyEvent.getCode());
             if (keyEvent.getCode().equals(KeyCode.ENTER)) {
-                boxes.getChildren().clear();
-                OverlappingModel overlappingModel = new OverlappingModel(inputArray, 2, new Vector2i(30, 30));
-                boxes.getChildren().addAll(createBoxesFrom2DArray(overlappingModel.solve()));
+                generate();
             } else if (keyEvent.getCode().equals(KeyCode.BACK_SPACE)) {
                 initPatternEditor();
             } else if (keyEvent.getCode().equals(KeyCode.D)) {
@@ -119,42 +198,38 @@ public class App extends Application {
         stage.show();
     }
 
+    private void generate() {
+        applicationState = ApplicationState.VIEW;
+        boxes.getChildren().clear();
+        OverlappingModel overlappingModel = new OverlappingModel(inputArray, patternSize, outputSize, rotation, symmetry);
+        boxes.getChildren().addAll(createBoxesFrom2DArray(overlappingModel.solve()));
+    }
+
     private void initPatternEditor() {
-        int inputX = 5;
-        int inputY = 5;
+        applicationState = ApplicationState.EDIT;
+        int inputX = inputSize.x;
+        int inputY = inputSize.y;
 
         boxes.getChildren().clear();
         inputArray = new int[inputY][inputX];
 
-        for (int i = 0; i < colors.size(); i++) {
-            Box box = new Box(BOX_SIZE * 2, BOX_SIZE * 2, BOX_SIZE * 2);
-            box.translateXProperty().setValue(- BOX_SIZE * inputX);
-            box.translateZProperty().setValue(0);
-            box.translateYProperty().setValue(BOX_SIZE * 2.1 * i);
-            final PhongMaterial phongMaterial = new PhongMaterial();
-            phongMaterial.setDiffuseColor(colors.get(i));
-            box.setMaterial(phongMaterial);
-            box.setUserData(i);
-            box.setOnMouseClicked(mouseEvent -> {
-                currentColor = (int) box.getUserData();
-            });
-            boxes.getChildren().add(box);
-        }
-
-
+        double zoomedBoxSize = (BOX_SIZE * 5);
 
         for (int x = 0; x < inputX; x++) {
             for (int y = 0; y < inputY; y++) {
                 inputArray[y][x] = 0;
-                Box box = new Box(BOX_SIZE * 0.9f, BOX_SIZE * 0.9f, BOX_SIZE * 0.9f);
-                box.translateXProperty().setValue(BOX_SIZE * (x - (inputX / 2)));
+                Box box = new Box(zoomedBoxSize * 0.9f, zoomedBoxSize * 0.9f, zoomedBoxSize * 0.9f);
+                box.translateXProperty().setValue(zoomedBoxSize * (x - (inputX / 2)));
                 box.translateZProperty().setValue(0);
-                box.translateYProperty().setValue(BOX_SIZE * (y - (inputY / 2)));
+                box.translateYProperty().setValue(zoomedBoxSize * (y - (inputY / 2)));
+                final PhongMaterial phongMaterial = new PhongMaterial();
+                phongMaterial.setDiffuseColor(colors.get(0));
+                box.setMaterial(phongMaterial);
                 box.setUserData(new Vector2i(x, y));
                 box.setOnMouseClicked(mouseEvent -> {
-                    final PhongMaterial phongMaterial = new PhongMaterial();
-                    phongMaterial.setDiffuseColor(colors.get(currentColor));
-                    box.setMaterial(phongMaterial);
+                    final PhongMaterial material = (PhongMaterial) box.getMaterial();
+                    material.setDiffuseColor(colors.get(currentColor));
+                    box.setMaterial(material);
                     Vector2i userData = (Vector2i) box.getUserData();
                     inputArray[userData.y][userData.x] = currentColor;
                 });

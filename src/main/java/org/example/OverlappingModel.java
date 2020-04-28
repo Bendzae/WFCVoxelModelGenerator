@@ -28,6 +28,21 @@ public class OverlappingModel {
 
     private Double baseEntropy;
 
+    public OverlappingModel(int[][] input, int patternSize, Vector2i outputSize, boolean rotation, boolean symmetry) {
+        this.input = new Grid(input);
+        this.patternSize = patternSize;
+        this.rotation = rotation;
+        this.symmetry = symmetry;
+        int calculatedOutputSize = outputSize.x / (patternSize - 1);
+        this.outputSize = new Vector2i(calculatedOutputSize, calculatedOutputSize);
+
+        computeColorFrequency();
+
+        findPatterns();
+
+        findNeighbours();
+    }
+
     public OverlappingModel(int[][] input, int patternSize, Vector2i outputSize) {
         this.input = new Grid(input);
         this.patternSize = patternSize;
@@ -164,7 +179,7 @@ public class OverlappingModel {
                 Pattern pattern = patterns.get(getWaveAt(x, y).get(0));
                 for (int px = 0; px < patternSize; px++) {
                     for (int py = 0; py < patternSize; py++) {
-                        grid[y * sizeFactor + py][x * sizeFactor + px] = pattern.get(px,py);
+                        grid[y * sizeFactor + py][x * sizeFactor + px] = pattern.get(px, py);
                     }
                 }
             }
@@ -293,7 +308,8 @@ public class OverlappingModel {
             }
         }
         if (minIndex == -1) {
-            throw new RuntimeException("couldnt find lowest entropy cell.");
+//            throw new RuntimeException("couldnt find lowest entropy cell.");
+            return 0;
         }
         return minIndex;
     }
