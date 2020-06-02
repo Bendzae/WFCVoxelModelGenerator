@@ -4,6 +4,8 @@
 
 * Uses JavaFX for UI and 3D-Rendering
 
+* Check out the original WFC implementation by Maxim Gumin: https://github.com/mxgmn/WaveFunctionCollapse
+
 ## Prerequisites
  * Maven
  * Java 11+
@@ -21,3 +23,6 @@ mvn install
 
 Run App.Java
 
+## Example
+
+![example](/example.png "Example")
