@@ -16,7 +16,8 @@ public final class Voxel {
     }
 
     public int getColourIndex() {
-        return colourIndex;
+        //Seems like this was a bug (maybe due to change in file format or bigger color palletes)
+        return Byte.toUnsignedInt(colourIndex);
     }
 
     @Override
