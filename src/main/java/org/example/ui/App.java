@@ -3,8 +3,6 @@ package org.example.ui;
 import javafx.application.Application;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
@@ -19,12 +17,18 @@ import javafx.scene.shape.Box;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Transform;
 import javafx.stage.Stage;
+import org.example.voxparser.*;
 import org.example.wfc.NeighbourStrategy;
 import org.example.wfc.OverlappingModel;
 import org.joml.Vector2i;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -216,35 +220,101 @@ public class App extends Application {
         applicationState = ApplicationState.EDIT;
         int inputX = inputSize.x;
         int inputY = inputSize.y;
+        int inputZ = inputSize.y;
 
-        if(boxes == null) return;
+        if (boxes == null) return;
 
         boxes.getChildren().clear();
         if (inputArray == null) inputArray = new int[inputY][inputX];
 
-        double zoomedBoxSize = (BOX_SIZE * 5);
+//        double zoomedBoxSize = (BOX_SIZE * 5);
+        double zoomedBoxSize = BOX_SIZE;
 
-        for (int x = 0; x < inputX; x++) {
-            for (int y = 0; y < inputY; y++) {
-                if (inputArray == null) inputArray[y][x] = 0;
-                Box box = new Box(zoomedBoxSize * 0.9f, zoomedBoxSize * 0.9f, zoomedBoxSize * 0.9f);
-                box.translateXProperty().setValue(zoomedBoxSize * (x - (inputX / 2)));
-                box.translateZProperty().setValue(0);
-                box.translateYProperty().setValue(zoomedBoxSize * (y - (inputY / 2)));
-                final PhongMaterial phongMaterial = new PhongMaterial();
-                phongMaterial.setDiffuseColor(colors.get(inputArray[y][x]));
-                box.setMaterial(phongMaterial);
-                box.setUserData(new Vector2i(x, y));
-                box.setOnMouseClicked(mouseEvent -> {
-                    final PhongMaterial material = (PhongMaterial) box.getMaterial();
-                    material.setDiffuseColor(colors.get(currentColor));
-                    box.setMaterial(material);
-                    Vector2i userData = (Vector2i) box.getUserData();
-                    inputArray[userData.y][userData.x] = currentColor;
-                });
-                boxes.getChildren().add(box);
-            }
+        InputStream stream = null;
+        try {
+            stream = new FileInputStream("src/chr_knight.vox");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
+        VoxFile voxFile;
+        voxFile = null;
+
+        try (VoxReader reader = new VoxReader(stream)) {
+            // VoxReader::read will never return null,
+            // but it can throw an InvalidVoxException.
+            voxFile = reader.read();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // VoxFile::getMaterials returns a map from material ID to material.
+        // If your vox file contains the deprecated materials
+        // stored in MATT chunks, use VoxFile::getOldMaterials instead.
+        HashMap<Integer, VoxMaterial> materials = voxFile.getMaterials();
+
+        // VoxFile::getPalette returns the palette used for the model.
+        // The palette is an array of ints formatted as R8G8B8A8.
+        int[] palette = voxFile.getPalette();
+
+        // VoxFile::getModels returns all the models used in the file.
+        // Any valid .vox file must contain at least one model,
+        // therefore models[0] will never be null.
+        VoxModel[] models = voxFile.getModels();
+        VoxModel model = models[0];
+
+        // And finally, actually retrieving the voxels.
+        Vector3<Integer> size = model.getSize();
+        Voxel[] voxels = model.getVoxels();
+
+        Arrays.stream(voxels).forEach(voxel -> {
+            byte x = voxel.getPosition().getX();
+            byte y = voxel.getPosition().getY();
+            byte z = voxel.getPosition().getZ();
+            int colourIndex = voxel.getColourIndex();
+//            int color = colourIndex > 0 ? palette[colourIndex] : 0x88888888;
+            int color = colourIndex > 0 ? palette[colourIndex] : palette[colourIndex];
+
+            Box box = new Box(zoomedBoxSize, zoomedBoxSize, zoomedBoxSize);
+            box.translateXProperty().setValue(zoomedBoxSize * (x - (size.getX() / 2)));
+            box.translateYProperty().setValue(zoomedBoxSize * (-z - (-size.getZ() / 2)));
+            box.translateZProperty().setValue(zoomedBoxSize * (y - (size.getY() / 2)));
+
+            final PhongMaterial phongMaterial = new PhongMaterial();
+
+
+            int red = color & 0xFF;
+            int green = (color >> 8) & 0xFF;
+            int blue = (color >> 16) & 0xFF;
+
+            System.out.println(red + " " + green + " " + blue);
+
+            phongMaterial.setDiffuseColor(new Color(red / 255.0, green / 255.0, blue / 255.0, 1));
+            box.setMaterial(phongMaterial);
+            box.setUserData(new Vector2i(x, y));
+            boxes.getChildren().add(box);
+        });
+
+//        for (int x = 0; x < inputX; x++) {
+//            for (int y = 0; y < inputY; y++) {
+//                if (inputArray == null) inputArray[y][x] = 0;
+//                Box box = new Box(zoomedBoxSize * 0.9f, zoomedBoxSize * 0.9f, zoomedBoxSize * 0.9f);
+//                box.translateXProperty().setValue(zoomedBoxSize * (x - (inputX / 2)));
+//                box.translateZProperty().setValue(0);
+//                box.translateYProperty().setValue(zoomedBoxSize * (y - (inputY / 2)));
+//                final PhongMaterial phongMaterial = new PhongMaterial();
+//                phongMaterial.setDiffuseColor(colors.get(inputArray[y][x]));
+//                box.setMaterial(phongMaterial);
+//                box.setUserData(new Vector2i(x, y));
+//                box.setOnMouseClicked(mouseEvent -> {
+//                    final PhongMaterial material = (PhongMaterial) box.getMaterial();
+//                    material.setDiffuseColor(colors.get(currentColor));
+//                    box.setMaterial(material);
+//                    Vector2i userData = (Vector2i) box.getUserData();
+//                    inputArray[userData.y][userData.x] = currentColor;
+//                });
+//                boxes.getChildren().add(box);
+//            }
+//        }
     }
 
     private void clearInput() {
