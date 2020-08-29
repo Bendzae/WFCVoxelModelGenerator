@@ -33,6 +33,8 @@ final class ChunkFactory {
             case "nSHP":
             case "LAYR":
             case "rOBJ":
+            case "rCAM":
+            case "NOTE":
                 chunk = new VoxDummyChunk();
                 break;
         }
