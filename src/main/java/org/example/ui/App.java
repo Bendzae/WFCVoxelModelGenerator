@@ -19,6 +19,7 @@ import javafx.scene.shape.Box;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Transform;
 import javafx.stage.Stage;
+import org.example.wfc.NeighbourStrategy;
 import org.example.wfc.OverlappingModel;
 import org.joml.Vector2i;
 
@@ -31,9 +32,10 @@ import java.util.List;
  */
 public class App extends Application {
 
+
     private enum ApplicationState {
         EDIT,
-        VIEW
+        VIEW;
     }
 
     private ApplicationState applicationState = ApplicationState.EDIT;
@@ -50,13 +52,14 @@ public class App extends Application {
     private static Scene scene;
 
     //WFC Parameters
-    private List<Color> colors = List.of(Color.WHITE, Color.RED, Color.BLACK, Color.BLUE);
+    private List<Color> colors = List.of(Color.WHITE, Color.RED, Color.BLACK, Color.BLUE, Color.GREEN, Color.YELLOW);
     private int currentColor = 0;
     private boolean rotation = false;
     private boolean symmetry = false;
     private int patternSize = 2;
     private Vector2i inputSize = new Vector2i(5, 5);
     private Vector2i outputSize = new Vector2i(30, 30);
+    private NeighbourStrategy neighbourStrategy = NeighbourStrategy.MATCH_EDGES;
 
     int[][] inputArray;
     private SmartGroup boxes;
@@ -135,6 +138,12 @@ public class App extends Application {
         CheckBox symmetryCheckBox = new CheckBox("Symmetry");
         symmetryCheckBox.setOnAction(actionEvent -> symmetry = symmetryCheckBox.isSelected());
 
+        ObservableList<NeighbourStrategy> neighbourStrategies = FXCollections.observableArrayList(NeighbourStrategy.MATCH_EDGES, NeighbourStrategy.INPUT_NEIGHBOURS);
+        final ComboBox<NeighbourStrategy> neighbourStrategyComboBox = new ComboBox<NeighbourStrategy>(neighbourStrategies);
+        neighbourStrategyComboBox.getSelectionModel().selectFirst();
+        neighbourStrategyComboBox.setOnAction(actionEvent -> neighbourStrategy = neighbourStrategyComboBox.getValue());
+
+
         //Buttons
         Button generateButton = new Button("Generate");
         generateButton.setOnAction(actionEvent -> generate());
@@ -154,6 +163,7 @@ public class App extends Application {
                 patternSizeTextField,
                 rotationCheckBox,
                 symmetryCheckBox,
+                neighbourStrategyComboBox,
                 generateButton,
                 editInputButton,
                 clearInputButton
@@ -173,8 +183,6 @@ public class App extends Application {
         subScene.setFill(Color.BLACK.brighter().brighter());
         subScene.setCamera(camera);
 
-        initPatternEditor();
-
         parent.setRight(subScene);
 
         scene = new Scene(parent, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
@@ -191,6 +199,7 @@ public class App extends Application {
         });
 
         initMouseControl(boxes, scene);
+        initPatternEditor();
 
         stage.setScene(scene);
         stage.show();
@@ -199,7 +208,7 @@ public class App extends Application {
     private void generate() {
         applicationState = ApplicationState.VIEW;
         boxes.getChildren().clear();
-        OverlappingModel overlappingModel = new OverlappingModel(inputArray, patternSize, outputSize, rotation, symmetry);
+        OverlappingModel overlappingModel = new OverlappingModel(inputArray, patternSize, outputSize, rotation, symmetry, neighbourStrategy);
         boxes.getChildren().addAll(createBoxesFrom2DArray(overlappingModel.solve()));
     }
 
@@ -207,6 +216,8 @@ public class App extends Application {
         applicationState = ApplicationState.EDIT;
         int inputX = inputSize.x;
         int inputY = inputSize.y;
+
+        if(boxes == null) return;
 
         boxes.getChildren().clear();
         if (inputArray == null) inputArray = new int[inputY][inputX];

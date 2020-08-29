@@ -37,8 +37,11 @@ public class Grid {
     }
 
     public int getWrapped(int x, int y) {
+
         int wrappedX = x % size.x();
+        if(wrappedX < 0) wrappedX = size.x() + wrappedX;
         int wrappedY = y % size.y();
+        if(wrappedY < 0) wrappedY = size.y() + wrappedY;
         return grid[wrappedY][wrappedX];
     }
 

@@ -13,7 +13,7 @@ public class OverlappingModel {
     private int patternSize;
     private boolean rotation = true;
     private boolean symmetry = true;
-    private int maximumTries = 100000;
+    private int maximumTries = 100;
     private int maxPropagationTries = 0;
 
     public List<Pattern> patterns;
@@ -28,7 +28,7 @@ public class OverlappingModel {
 
     private Double baseEntropy;
 
-    public OverlappingModel(int[][] input, int patternSize, Vector2i outputSize, boolean rotation, boolean symmetry) {
+    public OverlappingModel(int[][] input, int patternSize, Vector2i outputSize, boolean rotation, boolean symmetry, NeighbourStrategy neighbourStrategy) {
         this.input = new Grid(input);
         this.patternSize = patternSize;
         this.rotation = rotation;
@@ -40,7 +40,14 @@ public class OverlappingModel {
 
         findPatterns();
 
-        findNeighbours();
+        switch (neighbourStrategy) {
+            case MATCH_EDGES:
+                findNeighbours();
+                break;
+            case INPUT_NEIGHBOURS:
+//                findNeighboursStrict();
+                break;
+        }
     }
 
     public OverlappingModel(int[][] input, int patternSize, Vector2i outputSize) {
@@ -294,9 +301,43 @@ public class OverlappingModel {
         }
     }
 
-    private void findNeighboursStrict() {
-
-    }
+//    public void findNeighboursStrict(Grid input) {
+//        this.patternNeighbours = new Neighbours[patterns.size()];
+//        int boundX = input.size().x();
+//        int boundY = input.size().y();
+//        for (int x = 0; x < boundX; x++) {
+//            for (int y = 0; y < boundY; y++) {
+//                Pattern currentPattern = input.getPatternAtPosition(new Vector2i(x, y), patternSize);
+//                int patternIndex = patterns.indexOf(currentPattern);
+//
+//                if (patternNeighbours[patternIndex] == null) patternNeighbours[patternIndex] = new Neighbours();
+//
+//                for (int i = 0; i < Direction.values().length; i++) {
+//                    Direction direction = Direction.values()[i];
+//                    Vector2i dir = Utils.DIRECTIONS.get(i);
+//
+//                    Vector2i pos = new Vector2i(x, y).add(dir);
+//
+//                    Pattern otherPattern = input.getPatternAtPosition(pos, patternSize);
+//                    int otherIndex = patterns.indexOf(otherPattern);
+//                    patternNeighbours[patternIndex].addNeighbour(direction, otherIndex);
+//                }
+//
+//                if(rotation) {
+//                    List<Pattern> rotatedPatterns = input.getRotatedPatterns(currentPattern);
+//
+//                    Pattern quarter = rotatedPatterns.get(0);
+//
+//                    int quarterIndex = patterns.indexOf(quarter);
+//
+//                    if (patternNeighbours[quarterIndex] == null) patternNeighbours[quarterIndex] = new Neighbours();
+//
+//
+//                    patternNeighbours[quarterIndex].addNeighbour()
+//                }
+//            }
+//        }
+//    }
 
     private int getLowestEntropyCell() {
         double min = Double.MAX_VALUE;
@@ -386,5 +427,4 @@ public class OverlappingModel {
             return neighbours.get(direction).add(neighbour);
         }
     }
-
 }
