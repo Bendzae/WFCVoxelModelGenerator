@@ -18,6 +18,7 @@ import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Transform;
 import javafx.stage.Stage;
 import org.example.voxparser.*;
+import org.example.voxparser.VoxSerializer;
 import org.example.wfc.NeighbourStrategy;
 import org.example.wfc.OverlappingModel;
 import org.joml.Vector2i;
@@ -70,7 +71,6 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-
         //Root Element
         BorderPane parent = new BorderPane();
 
@@ -232,7 +232,9 @@ public class App extends Application {
 
         InputStream stream = null;
         try {
-            stream = new FileInputStream("src/chr_knight.vox");
+//            stream = new FileInputStream("src/chr_knight.vox");
+            stream = new FileInputStream("output/output.vox");
+//            stream = new FileInputStream("src/testCube.vox");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -286,13 +288,23 @@ public class App extends Application {
             int green = (color >> 8) & 0xFF;
             int blue = (color >> 16) & 0xFF;
 
-            System.out.println(red + " " + green + " " + blue);
-
             phongMaterial.setDiffuseColor(new Color(red / 255.0, green / 255.0, blue / 255.0, 1));
             box.setMaterial(phongMaterial);
             box.setUserData(new Vector2i(x, y));
             boxes.getChildren().add(box);
         });
+
+        Voxel[] testVoxels = new Voxel[2*2*2];
+        for (byte i = 0; i < 2; i++) {
+            for (byte j = 0; j < 2; j++) {
+                for (byte k = 0; k < 2; k++) {
+                    testVoxels[i + 2 * (j + 2 * k)] = new Voxel(new Vector3<Byte>(i,j,k), (byte)7);
+                }
+            }
+        }
+        VoxModel testModel = new VoxModel(new Vector3<>(2,2,2), testVoxels);
+        VoxSerializer voxSerializer = new VoxSerializer();
+        voxSerializer.writeToVox(testModel, "output/output.vox");
 
 //        for (int x = 0; x < inputX; x++) {
 //            for (int y = 0; y < inputY; y++) {

@@ -2,11 +2,12 @@ package org.example.voxparser;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
 
-final class StreamUtils {
+public final class StreamUtils {
     static int readIntLE(InputStream stream) throws IOException {
         byte[] bytes = new byte[4];
         if (stream.read(bytes) != 4) {
@@ -14,6 +15,15 @@ final class StreamUtils {
         }
 
         return ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
+    }
+
+    static void writeIntLE(OutputStream stream, int i) throws IOException {
+        ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        byteBuffer.putInt(i);
+        byteBuffer.flip();
+
+        stream.write(byteBuffer.array());
     }
 
     static float readFloatLE(InputStream stream) throws IOException {
@@ -38,7 +48,7 @@ final class StreamUtils {
             throw new IOException("Not enough bytes to read a vector3b");
         }
 
-        return new Vector3<>((byte)x, (byte)y, (byte)z);
+        return new Vector3<>((byte) x, (byte) y, (byte) z);
     }
 
     static String readString(InputStream stream) throws IOException {
