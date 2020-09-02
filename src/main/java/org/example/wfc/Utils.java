@@ -1,5 +1,6 @@
 package org.example.wfc;
 
+import org.example.voxparser.Vector3;
 import org.joml.Vector2i;
 
 import java.util.List;
@@ -11,7 +12,16 @@ public class Utils {
     public static final Vector2i UP = new Vector2i(0, -1);
     public static final Vector2i DOWN = new Vector2i(0, 1);
 
+
+    public static final Vector3<Integer> LEFT3D = new Vector3(-1, 0, 0);
+    public static final Vector3<Integer> RIGHT3D = new Vector3(1, 0, 0);
+    public static final Vector3<Integer> UP3D = new Vector3(0, -1, 0);
+    public static final Vector3<Integer> DOWN3D = new Vector3(0, 1, 0);
+    public static final Vector3<Integer> FORWARD3D = new Vector3(0, 0, 1);
+    public static final Vector3<Integer> BACKWARD3D = new Vector3(0, 0, -1);
+
     public static final List<Vector2i> DIRECTIONS = List.of(LEFT, RIGHT, UP, DOWN);
+    public static final List<Vector3<Integer>> DIRECTIONS3D = List.of(LEFT3D, RIGHT3D, UP3D, DOWN3D,FORWARD3D,BACKWARD3D);
 
     public static String print2DArray(int[][] array) {
         StringBuilder stringBuilder = new StringBuilder();

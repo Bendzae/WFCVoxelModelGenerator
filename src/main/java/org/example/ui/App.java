@@ -174,6 +174,8 @@ public class App extends Application {
         //Buttons
         Button generateButton = new Button("Generate");
         generateButton.setOnAction(actionEvent -> generate());
+        Button showPatternsButton = new Button("Show Patterns");
+        showPatternsButton.setOnAction(actionEvent -> showPatterns());
         Button editInputButton = new Button("Edit Input");
         editInputButton.setOnAction(actionEvent -> initPatternEditor());
         Button clearInputButton = new Button("Clear");
@@ -193,6 +195,7 @@ public class App extends Application {
                 symmetryCheckBox,
                 neighbourStrategyComboBox,
                 generateButton,
+                showPatternsButton,
                 editInputButton,
                 clearInputButton
         );
@@ -245,12 +248,19 @@ public class App extends Application {
                         new Vector3<>((pos.getX() * 2) * patternSize, (pos.getY() * 2) * patternSize, (pos.getZ() * 2) * patternSize + 1)
                         )
                 ));
-//        simpleModel3D.patternsByPosition.forEach((pos, i) -> boxes.getChildren()
-//                .addAll(createBoxesFromVoxelArray(
-//                        simpleModel3D.patterns.get(i).getRawArray(),
-//                        new Vector3<>(pos.getX() * patternSize, pos.getY() * patternSize, pos.getZ() * patternSize)
-//                        )
-//                ));
+    }
+
+    private void showPatterns() {
+        applicationState = ApplicationState.VIEW;
+        boxes.getChildren().clear();
+        SimpleModel3D simpleModel3D = new SimpleModel3D(inputArray, patternSize, outputSize, rotation, symmetry);
+
+        simpleModel3D.patternsByPosition.forEach((pos, i) -> boxes.getChildren()
+                .addAll(createBoxesFromVoxelArray(
+                        simpleModel3D.patterns.get(i).getRawArray(),
+                        new Vector3<>((pos.getX() * 2) * patternSize, (pos.getY() * 2) * patternSize, (pos.getZ() * 2) * patternSize + 1)
+                        )
+                ));
     }
 
     private void loadVoxModel(String filepath) {

@@ -1,7 +1,6 @@
 package org.example.wfc;
 
 import org.example.voxparser.Vector3;
-import org.joml.Vector2i;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +62,7 @@ public class Grid3D {
                     try {
                         pattern.set(px, py, pz, get(position.getX() + px, position.getY() + py, position.getZ() + pz));
                     } catch (IllegalArgumentException ex) {
-                        return null; //TODO better way to handle this?
+                        pattern.set(px, py, pz, -1); //TODO better way to handle this?
                     }
                 }
             }
