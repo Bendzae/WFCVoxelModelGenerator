@@ -34,8 +34,8 @@ public class VoxSerializer {
 
     public void writeToVox(VoxModel model, String filename) {
 
-        int size_content_length = 3 * 4;
-        int xyzi_content_length = model.getVoxels().length * 4 + 4;
+        int size_content_length = 3 * 4; // X,Y,Z * 4byte int
+        int xyzi_content_length = model.getVoxels().length * 4 + 4; //4byte int N, N*4bye for voxels
 
         File file = new File(filename);
         try (FileOutputStream fos = new FileOutputStream(file)) {
@@ -79,12 +79,6 @@ public class VoxSerializer {
                 };
                 fos.write(voxBytes);
             }
-
-            byte[] padding = new byte[100];
-            for (int i = 0; i < 100; i++) {
-                padding[i] = (byte) 0;
-            }
-            fos.write(padding);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

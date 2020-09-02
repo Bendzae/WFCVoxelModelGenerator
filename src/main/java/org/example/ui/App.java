@@ -21,16 +21,22 @@ import org.example.voxparser.*;
 import org.example.voxparser.VoxSerializer;
 import org.example.wfc.NeighbourStrategy;
 import org.example.wfc.OverlappingModel;
+import org.example.wfc.SimpleModel3D;
 import org.joml.Vector2i;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * JavaFX App
@@ -55,18 +61,20 @@ public class App extends Application {
     private final DoubleProperty angleX = new SimpleDoubleProperty(0);
     private final DoubleProperty angleY = new SimpleDoubleProperty(0);
     private static Scene scene;
+    private int[] palette = ColorUtils.DEFAULT_PALETTE;
 
     //WFC Parameters
     private List<Color> colors = List.of(Color.WHITE, Color.RED, Color.BLACK, Color.BLUE, Color.GREEN, Color.YELLOW);
+    private String currentFile;
     private int currentColor = 0;
     private boolean rotation = false;
     private boolean symmetry = false;
     private int patternSize = 2;
-    private Vector2i inputSize = new Vector2i(5, 5);
-    private Vector2i outputSize = new Vector2i(30, 30);
+    private Vector3<Integer> inputSize = new Vector3<>(6, 6, 6);
+    private Vector3<Integer> outputSize = new Vector3<>(30, 30, 30);
     private NeighbourStrategy neighbourStrategy = NeighbourStrategy.MATCH_EDGES;
 
-    int[][] inputArray;
+    int[][][] inputArray;
     private SmartGroup boxes;
 
     @Override
@@ -90,6 +98,21 @@ public class App extends Application {
         comboBox.getSelectionModel().selectFirst();
         comboBox.setOnAction(actionEvent -> currentColor = colors.indexOf(comboBox.getValue()));
 
+        //Model Loader Label
+        Label modelLabel = new Label("Input Model:");
+        //Model Loader
+        List<String> modelFiles = new ArrayList<>();
+        try (Stream<Path> walk = Files.walk(Paths.get("inputmodels"))) {
+
+            modelFiles = walk.filter(Files::isRegularFile)
+                    .map(Path::toString).collect(Collectors.toList());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        final ComboBox<String> modelComboBox = new ComboBox<>(FXCollections.observableArrayList(modelFiles));
+        modelComboBox.getSelectionModel().selectFirst();
+        modelComboBox.setOnAction(actionEvent -> loadVoxModel(modelComboBox.getValue()));
+
         //Parameters
         Label inputSizeLabel = new Label("Input Size:");
         TextField inputSizeTextField = new TextField();
@@ -101,11 +124,11 @@ public class App extends Application {
                 int intValue = Integer.parseInt(newValue);
                 if (intValue > inputMaxSize) intValue = inputMaxSize;
                 inputSizeTextField.setText(String.valueOf(intValue));
-                inputSize = new Vector2i(intValue, intValue);
+                inputSize = new Vector3<>(intValue, intValue, intValue);
                 if (applicationState == ApplicationState.EDIT) clearInput();
             }
         });
-        inputSizeTextField.setText(String.valueOf(inputSize.x));
+        inputSizeTextField.setText(String.valueOf(inputSize.getX()));
 
         Label outputSizeLabel = new Label("Output Size:");
         TextField outputSizeTextField = new TextField();
@@ -117,10 +140,10 @@ public class App extends Application {
                 int intValue = Integer.parseInt(newValue);
                 if (intValue > outputMaxSize) intValue = outputMaxSize;
                 outputSizeTextField.setText(String.valueOf(intValue));
-                outputSize = new Vector2i(intValue, intValue);
+                outputSize = new Vector3<>(intValue, intValue, intValue);
             }
         });
-        outputSizeTextField.setText(String.valueOf(outputSize.x));
+        outputSizeTextField.setText(String.valueOf(outputSize.getX()));
 
         Label patternSizeLabel = new Label("Pattern Size:");
         TextField patternSizeTextField = new TextField();
@@ -159,6 +182,7 @@ public class App extends Application {
         menu.getChildren().addAll(
                 colorLabel,
                 comboBox,
+                modelComboBox,
                 inputSizeLabel,
                 inputSizeTextField,
                 outputSizeLabel,
@@ -203,7 +227,8 @@ public class App extends Application {
         });
 
         initMouseControl(boxes, scene);
-        initPatternEditor();
+//        initPatternEditor();
+        loadVoxModel(modelComboBox.getValue());
 
         stage.setScene(scene);
         stage.show();
@@ -212,29 +237,30 @@ public class App extends Application {
     private void generate() {
         applicationState = ApplicationState.VIEW;
         boxes.getChildren().clear();
-        OverlappingModel overlappingModel = new OverlappingModel(inputArray, patternSize, outputSize, rotation, symmetry, neighbourStrategy);
-        boxes.getChildren().addAll(createBoxesFrom2DArray(overlappingModel.solve()));
+        SimpleModel3D simpleModel3D = new SimpleModel3D(inputArray, patternSize, outputSize, rotation, symmetry);
+
+        simpleModel3D.patternsByPosition.forEach((pos, i) -> boxes.getChildren()
+                .addAll(createBoxesFromVoxelArray(
+                        simpleModel3D.patterns.get(i).getRawArray(),
+                        new Vector3<>((pos.getX() * 2) * patternSize, (pos.getY() * 2) * patternSize, (pos.getZ() * 2) * patternSize + 1)
+                        )
+                ));
+//        simpleModel3D.patternsByPosition.forEach((pos, i) -> boxes.getChildren()
+//                .addAll(createBoxesFromVoxelArray(
+//                        simpleModel3D.patterns.get(i).getRawArray(),
+//                        new Vector3<>(pos.getX() * patternSize, pos.getY() * patternSize, pos.getZ() * patternSize)
+//                        )
+//                ));
     }
 
-    private void initPatternEditor() {
-        applicationState = ApplicationState.EDIT;
-        int inputX = inputSize.x;
-        int inputY = inputSize.y;
-        int inputZ = inputSize.y;
-
+    private void loadVoxModel(String filepath) {
         if (boxes == null) return;
-
+        inputArray = null;
         boxes.getChildren().clear();
-        if (inputArray == null) inputArray = new int[inputY][inputX];
-
-//        double zoomedBoxSize = (BOX_SIZE * 5);
-        double zoomedBoxSize = BOX_SIZE;
 
         InputStream stream = null;
         try {
-//            stream = new FileInputStream("src/chr_knight.vox");
-            stream = new FileInputStream("output/output.vox");
-//            stream = new FileInputStream("src/testCube.vox");
+            stream = new FileInputStream(filepath);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -256,7 +282,7 @@ public class App extends Application {
 
         // VoxFile::getPalette returns the palette used for the model.
         // The palette is an array of ints formatted as R8G8B8A8.
-        int[] palette = voxFile.getPalette();
+        this.palette = voxFile.getPalette();
 
         // VoxFile::getModels returns all the models used in the file.
         // Any valid .vox file must contain at least one model,
@@ -266,45 +292,46 @@ public class App extends Application {
 
         // And finally, actually retrieving the voxels.
         Vector3<Integer> size = model.getSize();
+
+        inputArray = model.to3DArray();
+
         Voxel[] voxels = model.getVoxels();
 
-        Arrays.stream(voxels).forEach(voxel -> {
-            byte x = voxel.getPosition().getX();
-            byte y = voxel.getPosition().getY();
-            byte z = voxel.getPosition().getZ();
-            int colourIndex = voxel.getColourIndex();
-//            int color = colourIndex > 0 ? palette[colourIndex] : 0x88888888;
-            int color = colourIndex > 0 ? palette[colourIndex] : palette[colourIndex];
+        double zoomedBoxSize = BOX_SIZE;
 
-            Box box = new Box(zoomedBoxSize, zoomedBoxSize, zoomedBoxSize);
-            box.translateXProperty().setValue(zoomedBoxSize * (x - (size.getX() / 2)));
-            box.translateYProperty().setValue(zoomedBoxSize * (-z - (-size.getZ() / 2)));
-            box.translateZProperty().setValue(zoomedBoxSize * (y - (size.getY() / 2)));
+        this.boxes.getChildren().addAll(createBoxesFromVoxelArray(model.to3DArray()));
 
-            final PhongMaterial phongMaterial = new PhongMaterial();
+//        Arrays.stream(voxels).forEach(voxel -> {
+//            byte x = voxel.getPosition().getX();
+//            byte y = voxel.getPosition().getY();
+//            byte z = voxel.getPosition().getZ();
+//            int colourIndex = voxel.getColourIndex();
+//            int color = colourIndex > 0 ? palette[colourIndex] : palette[colourIndex];
+//
+//            Box box = new Box(zoomedBoxSize, zoomedBoxSize, zoomedBoxSize);
+//            box.translateXProperty().setValue(zoomedBoxSize * (x - (size.getX() / 2)));
+//            box.translateYProperty().setValue(zoomedBoxSize * (-z - (-size.getZ() / 2)));
+//            box.translateZProperty().setValue(zoomedBoxSize * (y - (size.getY() / 2)));
+//
+//            final PhongMaterial phongMaterial = new PhongMaterial();
+//
+//            phongMaterial.setDiffuseColor(ColorUtils.hexToColor(color));
+//            box.setMaterial(phongMaterial);
+//            box.setUserData(new Vector2i(x, y));
+//            boxes.getChildren().add(box);
+//        });
+    }
 
+    private void initPatternEditor() {
+        applicationState = ApplicationState.EDIT;
+        int inputX = inputSize.getX();
+        int inputY = inputSize.getY();
+        int inputZ = inputSize.getZ();
 
-            int red = color & 0xFF;
-            int green = (color >> 8) & 0xFF;
-            int blue = (color >> 16) & 0xFF;
+        if (boxes == null) return;
 
-            phongMaterial.setDiffuseColor(new Color(red / 255.0, green / 255.0, blue / 255.0, 1));
-            box.setMaterial(phongMaterial);
-            box.setUserData(new Vector2i(x, y));
-            boxes.getChildren().add(box);
-        });
-
-        Voxel[] testVoxels = new Voxel[2*2*2];
-        for (byte i = 0; i < 2; i++) {
-            for (byte j = 0; j < 2; j++) {
-                for (byte k = 0; k < 2; k++) {
-                    testVoxels[i + 2 * (j + 2 * k)] = new Voxel(new Vector3<Byte>(i,j,k), (byte)7);
-                }
-            }
-        }
-        VoxModel testModel = new VoxModel(new Vector3<>(2,2,2), testVoxels);
-        VoxSerializer voxSerializer = new VoxSerializer();
-        voxSerializer.writeToVox(testModel, "output/output.vox");
+        boxes.getChildren().clear();
+        if (inputArray == null) inputArray = new int[inputZ][inputY][inputX];
 
 //        for (int x = 0; x < inputX; x++) {
 //            for (int y = 0; y < inputY; y++) {
@@ -335,21 +362,28 @@ public class App extends Application {
     }
 
     private List<Box> createBoxesFromVoxelArray(int[][][] voxelModel) {
+        return createBoxesFromVoxelArray(voxelModel, new Vector3<Integer>(0, 0, 0));
+    }
+
+    private List<Box> createBoxesFromVoxelArray(int[][][] voxelModel, Vector3<Integer> offset) {
         List<Box> result = new ArrayList<>();
-        int size = voxelModel.length;
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
-                for (int z = 0; z < size; z++) {
-//                    if (voxelModel[x][y][z] != 0) {
-                    Box box = new Box(BOX_SIZE * 0.9f, BOX_SIZE * 0.9f, BOX_SIZE * 0.9f);
-                    box.translateXProperty().setValue(BOX_SIZE * (x - (size / 2)));
-                    box.translateYProperty().setValue(BOX_SIZE * (y - (size / 2)));
-                    box.translateZProperty().setValue(BOX_SIZE * (z - (size / 2)));
-                    final PhongMaterial phongMaterial = new PhongMaterial();
-                    phongMaterial.setDiffuseColor(Color.color(Math.random(), Math.random(), Math.random()));
-                    box.setMaterial(phongMaterial);
-                    result.add(box);
-//                    }
+        int sizeX = voxelModel[0][0].length;
+        int sizeY = voxelModel[0].length;
+        int sizeZ = voxelModel.length;
+        for (int x = 0; x < sizeX; x++) {
+            for (int y = 0; y < sizeY; y++) {
+                for (int z = 0; z < sizeZ; z++) {
+                    int colorIndex = voxelModel[z][y][x];
+                    if (colorIndex > 0) {
+                        Box box = new Box(BOX_SIZE, BOX_SIZE, BOX_SIZE);
+                        box.translateXProperty().setValue(BOX_SIZE * (x + offset.getX() - (sizeX / 2)));
+                        box.translateYProperty().setValue(BOX_SIZE * (y + offset.getY() - (sizeY / 2)));
+                        box.translateZProperty().setValue(BOX_SIZE * (z + offset.getZ() - (sizeZ / 2)));
+                        final PhongMaterial phongMaterial = new PhongMaterial();
+                        phongMaterial.setDiffuseColor(ColorUtils.hexToColor(this.palette[colorIndex]));
+                        box.setMaterial(phongMaterial);
+                        result.add(box);
+                    }
                 }
             }
         }
@@ -405,6 +439,12 @@ public class App extends Application {
         scene.setOnMouseDragged(event -> {
             angleX.set(anchorAngleX - (anchorY - event.getSceneY()));
             angleY.set(anchorAngleY + anchorX - event.getSceneX());
+        });
+
+        scene.setOnScroll(scrollEvent -> {
+            double delta = -scrollEvent.getDeltaY();
+            //Add it to the Z-axis location.
+            group.translateZProperty().set(group.getTranslateZ() + delta);
         });
     }
 

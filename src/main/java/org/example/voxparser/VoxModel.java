@@ -24,6 +24,25 @@ public final class VoxModel {
         return voxels;
     }
 
+    public int[][][] to3DArray() {
+        int[][][] out = new int[size.getY()][size.getZ()][size.getX()];
+
+        for (int x = 0; x < size.getX(); x++) {
+            for (int y = 0; y < size.getY(); y++) {
+                for (int z = 0; z < size.getZ(); z++) {
+                    out[y][z][x] = -1;
+                }
+            }
+
+        }
+
+        Arrays.stream(voxels).forEach(voxel -> {
+            Vector3<Byte> position = voxel.getPosition();
+            out[position.getY()][size.getZ()-position.getZ() - 1][position.getX()] = voxel.getColourIndex(); //Accounting for different coordinate systems
+        });
+        return out;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
