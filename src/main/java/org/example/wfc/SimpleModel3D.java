@@ -1,10 +1,8 @@
 package org.example.wfc;
 
 import org.example.voxparser.Vector3;
-import org.joml.Vector2i;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -14,8 +12,8 @@ public class SimpleModel3D {
     private int patternSize;
     private boolean rotation;
     private boolean symmetry;
-    private int maximumTries = 100;
-    private int maxPropagationTries = 0;
+    private int maximumTries = 5000;
+    private int maxPropagationTries = 10;
 
     public List<Pattern3D> patterns;
     public HashMap<Vector3<Integer>, Integer> patternsByPosition;
@@ -47,10 +45,6 @@ public class SimpleModel3D {
 
         findPatterns();
         findNeighbours();
-    }
-
-    public SimpleModel3D(int[][][] input, int patternSize, Vector3<Integer> outputSize) {
-        new SimpleModel3D(input, patternSize, outputSize, false, false);
     }
 
     public int[][][] solve() {
@@ -96,6 +90,7 @@ public class SimpleModel3D {
         System.out.println();
         if (tries >= maximumTries) {
             System.out.println("No solution after " + tries + " tries.");
+            return null;
         } else {
             System.out.println("Success after " + tries + " tries.");
         }
@@ -115,7 +110,7 @@ public class SimpleModel3D {
         while (!cellsToPropagate.isEmpty()) {
             int currentCell = cellsToPropagate.poll();
 
-            Vector3<Integer> cellPosition = getPosFromWaveIndex(cellIndex);
+            Vector3<Integer> cellPosition = getPosFromCellIndex(cellIndex);
 
             for (int i = 0; i < Direction3D.values().length; i++) {
                 Direction3D direction = Direction3D.values()[i];
@@ -228,7 +223,7 @@ public class SimpleModel3D {
         return Math.log(value) / Math.log(2);
     }
 
-    private int getCellIndexFromPos(int x, int y, int z) {
+    public int getCellIndexFromPos(int x, int y, int z) {
         return x + y * outputSize.getX() + z * outputSize.getX() * outputSize.getY();
     }
 
@@ -236,17 +231,21 @@ public class SimpleModel3D {
         return wave.get(getCellIndexFromPos(x, y, z));
     }
 
-    private Vector3<Integer> getPosFromWaveIndex(int index) {
-        int z = index % outputSize.getZ();
-        int y = (index / outputSize.getZ()) % outputSize.getY();
-        int x = index / (outputSize.getY() * outputSize.getZ());
+    public Vector3<Integer> getPosFromCellIndex(int index) {
+        int x = index % outputSize.getX();
+        int y = (index / outputSize.getX()) % outputSize.getY();
+        int z = index / (outputSize.getX() * outputSize.getY());
         return new Vector3<>(x, y, z);
     }
 
     public void findPatterns() {
+        Pattern3D emptyPattern = new Pattern3D(patternSize);
         this.patterns = new ArrayList<>();
+        //Add empty pattern at pos 0
+        this.patterns.add(emptyPattern);
         this.patternsByPosition = new HashMap<>();
         this.patternFrequency = new ArrayList<>();
+        this.patternFrequency.add(0.000001);
         int boundX = input.size().getX();
         int boundY = input.size().getY();
         int boundZ = input.size().getZ();
@@ -272,8 +271,10 @@ public class SimpleModel3D {
                             } else {
                                 int patternIndex = this.patterns.indexOf(pattern);
                                 this.patternsByPosition.put(patternPosition, patternIndex);
-                                Double patternFrequency = this.patternFrequency.get(patternIndex);
-                                this.patternFrequency.set(patternIndex, patternFrequency + 1);
+                                if (patternIndex != 0) { //dont count empty pattern to discourage empty solution TODO remove later
+                                    Double patternFrequency = this.patternFrequency.get(patternIndex);
+                                    this.patternFrequency.set(patternIndex, patternFrequency + 1);
+                                }
                             }
                         }
                     }
@@ -295,6 +296,13 @@ public class SimpleModel3D {
             this.patternNeighbours[i] = new Neighbours();
         }
 
+        for (int i = 0; i < 6; i++) {
+            Direction3D dir = Direction3D.values()[i];
+            for (int j = 0; j < patterns.size(); j++) {
+                this.patternNeighbours[0].addNeighbour(dir, j);
+            }
+        }
+
         patternsByPosition.forEach((position, patternIndex) -> {
             for (int i = 0; i < 6; i++) {
                 Direction3D dir = Direction3D.values()[i];
@@ -305,6 +313,8 @@ public class SimpleModel3D {
 
                 if (patternsByPosition.containsKey(newPos)) {
                     this.patternNeighbours[patternIndex].addNeighbour(dir, patternsByPosition.get(newPos));
+                } else {
+                    this.patternNeighbours[patternIndex].addNeighbour(dir, 0);
                 }
             }
         });

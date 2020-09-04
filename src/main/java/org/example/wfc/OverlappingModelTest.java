@@ -1,6 +1,7 @@
 package org.example.wfc;
 
 
+import org.example.voxparser.Vector3;
 import org.joml.Vector2i;
 import org.junit.Before;
 import org.junit.Test;
@@ -202,6 +203,19 @@ public class OverlappingModelTest {
         assertTrue(entropy1 > entropy2);
     }
 
+    @Test
+    public void indexToPos() {
+        int outSize = 3;
+        SimpleModel3D simpleModel3D = new SimpleModel3D(new int[2][2][2], 2, new Vector3<Integer>(outSize, outSize, outSize), false, false);
+
+        for (int i = 0; i < outSize * outSize * outSize; i++) {
+            Vector3<Integer> p = simpleModel3D.getPosFromCellIndex(i);
+            int cellIndexFromPos = simpleModel3D.getCellIndexFromPos(p.getX(), p.getY(), p.getZ());
+            assertEquals(cellIndexFromPos, i);
+        }
+    }
+
+
     private Double getEntropy(List<Integer> cell, List<Double> patternFrequency) {
         double sumOfWeights = cell.stream()
                 .map(index -> patternFrequency.get(index))
@@ -217,5 +231,6 @@ public class OverlappingModelTest {
     private double log2(double value) {
         return Math.log(value) / Math.log(2);
     }
+
 
 }

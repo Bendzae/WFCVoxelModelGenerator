@@ -15,6 +15,13 @@ public class Pattern3D {
     public Pattern3D(int size) {
         this.size = size;
         this.values = new int[size][size][size];
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                for (int z = 0; z < size; z++) {
+                    this.values[z][y][x] = -1;
+                }
+            }
+        }
     }
 
     public void set(int x, int y, int z, int value) {
@@ -66,8 +73,12 @@ public class Pattern3D {
         if (o == null || getClass() != o.getClass()) return false;
         Pattern3D pattern = (Pattern3D) o;
         if (size != pattern.size) return false;
-        for (int i = 0; i < size; i++) {
-            if (!Arrays.equals(values[i], pattern.values[i])) return false;
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                for (int z = 0; z < size; z++) {
+                    if(pattern.get(x,y,z) != values[z][y][x]) return false;
+                }
+            }
         }
         return true;
     }

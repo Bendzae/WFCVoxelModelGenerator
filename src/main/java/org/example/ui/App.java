@@ -71,7 +71,7 @@ public class App extends Application {
     private boolean symmetry = false;
     private int patternSize = 2;
     private Vector3<Integer> inputSize = new Vector3<>(6, 6, 6);
-    private Vector3<Integer> outputSize = new Vector3<>(30, 30, 30);
+    private Vector3<Integer> outputSize = new Vector3<>(10, 10, 10);
     private NeighbourStrategy neighbourStrategy = NeighbourStrategy.MATCH_EDGES;
 
     int[][][] inputArray;
@@ -241,13 +241,8 @@ public class App extends Application {
         applicationState = ApplicationState.VIEW;
         boxes.getChildren().clear();
         SimpleModel3D simpleModel3D = new SimpleModel3D(inputArray, patternSize, outputSize, rotation, symmetry);
-
-        simpleModel3D.patternsByPosition.forEach((pos, i) -> boxes.getChildren()
-                .addAll(createBoxesFromVoxelArray(
-                        simpleModel3D.patterns.get(i).getRawArray(),
-                        new Vector3<>((pos.getX() * 2) * patternSize, (pos.getY() * 2) * patternSize, (pos.getZ() * 2) * patternSize + 1)
-                        )
-                ));
+        int[][][] solution = simpleModel3D.solve();
+        if(solution != null) boxes.getChildren().addAll(createBoxesFromVoxelArray(solution));
     }
 
     private void showPatterns() {
@@ -258,7 +253,7 @@ public class App extends Application {
         simpleModel3D.patternsByPosition.forEach((pos, i) -> boxes.getChildren()
                 .addAll(createBoxesFromVoxelArray(
                         simpleModel3D.patterns.get(i).getRawArray(),
-                        new Vector3<>((pos.getX() * 2) * patternSize, (pos.getY() * 2) * patternSize, (pos.getZ() * 2) * patternSize + 1)
+                        new Vector3<>((pos.getX() * 2) * patternSize, (pos.getY() * 2) * patternSize, (pos.getZ() * 2) * patternSize)
                         )
                 ));
     }
