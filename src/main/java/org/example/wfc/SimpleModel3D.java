@@ -17,6 +17,7 @@ public class SimpleModel3D {
 
     public List<Pattern3D> patterns;
     public HashMap<Vector3<Integer>, Integer> patternsByPosition;
+    private List<Integer> yRotatedPatterns; //Maps original pattern index -> rotated pattern index in patterns List
     private int uniquePatternCount;
 
     public List<Double> patternFrequency;
@@ -283,16 +284,32 @@ public class SimpleModel3D {
             }
         }
         this.uniquePatternCount = this.patterns.size();
+
+        if(rotation) {
+            this.yRotatedPatterns = new ArrayList<>();
+            List<Pattern3D> yRotated = this.patterns.stream().map(p -> p.getYRotated()).collect(Collectors.toList());
+            for (int i = 0; i < yRotated.size(); i++) {
+                Pattern3D pattern = yRotated.get(i);
+                if(!this.patterns.contains(pattern)) {
+                    this.patterns.add(pattern);
+                }
+                int patternIndex = this.patterns.indexOf(pattern);
+
+                yRotatedPatterns.add(i, patternIndex);
+
+                if(this.patternFrequency.size() > patternIndex) {
+                    Double patternFrequency = this.patternFrequency.get(patternIndex);
+                    this.patternFrequency.set(patternIndex, patternFrequency + 1);
+                } else {
+                    this.patternFrequency.add(patternIndex,1d);
+                }
+            }
+        }
+
         int totalPatternCount = (boundX / patternSize) * (boundY / patternSize) * (boundZ / patternSize);
         for (int i = 0; i < patternFrequency.size(); i++) {
             double repetitions = patternFrequency.get(i);
             patternFrequency.set(i, repetitions / totalPatternCount);
-        }
-
-        if(rotation) {
-            List<Pattern3D> yRotated = this.patterns.stream().map(p -> p.getYRotated()).collect(Collectors.toList());
-            this.patterns.addAll(yRotated);
-            this.patternFrequency.addAll(Collections.unmodifiableList(this.patternFrequency));
         }
     }
 
@@ -327,15 +344,16 @@ public class SimpleModel3D {
         });
 
         if(rotation) {
-            for (int i = 0; i < this.uniquePatternCount; i++) {
+            for (int i = 1; i < this.uniquePatternCount; i++) {
                 Neighbours originalNeighbours = this.patternNeighbours[i];
 
                 int finalI = i;
                 Arrays.stream(Direction3D.values()).forEach(direction -> {
                     HashSet<Integer> originalPatterns = originalNeighbours.neighbours.get(direction);
                     HashSet<Integer> rotatedPatterns = (HashSet<Integer>) originalPatterns.stream()
-                        .map(patternIndex -> patternIndex + this.uniquePatternCount).collect(Collectors.toSet());
-                    this.patternNeighbours[finalI + uniquePatternCount].neighbours.put(Utils.rotateYDir(direction), rotatedPatterns);
+                        .map(patternIndex -> yRotatedPatterns.get(patternIndex)).collect(Collectors.toSet());
+
+                    rotatedPatterns.forEach(rotatedPattern -> this.patternNeighbours[yRotatedPatterns.get(finalI)].addNeighbour(Utils.rotateYDir(direction), rotatedPattern));
                 } );
             }
         }
