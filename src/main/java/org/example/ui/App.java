@@ -131,19 +131,52 @@ public class App extends Application {
         inputSizeTextField.setText(String.valueOf(inputSize.getX()));
 
         Label outputSizeLabel = new Label("Output Size:");
-        TextField outputSizeTextField = new TextField();
+        HBox outputSizeHbox = new HBox(3);
         int outputMaxSize = 100;
-        outputSizeTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+        int maxWidth = 50;
+        TextField outputSizeXTextField = new TextField();
+        outputSizeXTextField.setMaxWidth(maxWidth);
+        outputSizeXTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.matches("\\d{0,10}")) {
-                outputSizeTextField.setText(oldValue);
+                outputSizeXTextField.setText(oldValue);
             } else {
                 int intValue = Integer.parseInt(newValue);
                 if (intValue > outputMaxSize) intValue = outputMaxSize;
-                outputSizeTextField.setText(String.valueOf(intValue));
-                outputSize = new Vector3<>(intValue, intValue, intValue);
+                outputSizeXTextField.setText(String.valueOf(intValue));
+                outputSize = new Vector3<>(intValue, outputSize.getY(), outputSize.getZ());
             }
         });
-        outputSizeTextField.setText(String.valueOf(outputSize.getX()));
+        outputSizeXTextField.setText(String.valueOf(outputSize.getX()));
+
+        TextField outputSizeYTextField = new TextField();
+        outputSizeYTextField.setMaxWidth(maxWidth);
+        outputSizeYTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d{0,10}")) {
+                outputSizeYTextField.setText(oldValue);
+            } else {
+                int intValue = Integer.parseInt(newValue);
+                if (intValue > outputMaxSize) intValue = outputMaxSize;
+                outputSizeYTextField.setText(String.valueOf(intValue));
+                outputSize = new Vector3<>(outputSize.getX(), intValue, outputSize.getZ());
+            }
+        });
+        outputSizeYTextField.setText(String.valueOf(outputSize.getY()));
+
+        TextField outputSizeZTextField = new TextField();
+        outputSizeZTextField.setMaxWidth(maxWidth);
+        outputSizeZTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d{0,10}")) {
+                outputSizeZTextField.setText(oldValue);
+            } else {
+                int intValue = Integer.parseInt(newValue);
+                if (intValue > outputMaxSize) intValue = outputMaxSize;
+                outputSizeZTextField.setText(String.valueOf(intValue));
+                outputSize = new Vector3<>(outputSize.getX(), outputSize.getY(), intValue);
+            }
+        });
+        outputSizeZTextField.setText(String.valueOf(outputSize.getZ()));
+
+        outputSizeHbox.getChildren().addAll(outputSizeXTextField, outputSizeYTextField, outputSizeZTextField);
 
         Label patternSizeLabel = new Label("Pattern Size:");
         TextField patternSizeTextField = new TextField();
@@ -188,7 +221,7 @@ public class App extends Application {
                 inputSizeLabel,
                 inputSizeTextField,
                 outputSizeLabel,
-                outputSizeTextField,
+                outputSizeHbox,
                 patternSizeLabel,
                 patternSizeTextField,
                 rotationCheckBox,
@@ -240,6 +273,7 @@ public class App extends Application {
     private void generate() {
         applicationState = ApplicationState.VIEW;
         boxes.getChildren().clear();
+
         SimpleModel3D simpleModel3D = new SimpleModel3D(inputArray, patternSize, outputSize, rotation, symmetry);
         int[][][] solution = simpleModel3D.solve();
         if(solution != null) boxes.getChildren().addAll(createBoxesFromVoxelArray(solution));

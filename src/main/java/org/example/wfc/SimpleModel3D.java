@@ -249,9 +249,9 @@ public class SimpleModel3D {
         int boundX = input.size().getX();
         int boundY = input.size().getY();
         int boundZ = input.size().getZ();
-        for (int x = 0; x < boundX; x += patternSize) {
-            for (int y = 0; y < boundY; y += patternSize) {
-                for (int z = 0; z < boundY; z += patternSize) {
+        for (int x = 0; x <= boundX; x += patternSize) {
+            for (int y = 0; y <= boundY; y += patternSize) {
+                for (int z = 0; z <= boundZ; z += patternSize) {
                     ArrayList<Pattern3D> tempPatterns = new ArrayList<>();
                     Pattern3D currentPattern = input.getPatternAtPosition(new Vector3(x, y, z), patternSize);
                     if (currentPattern != null) {
