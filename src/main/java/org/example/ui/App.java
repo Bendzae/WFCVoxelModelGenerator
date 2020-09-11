@@ -71,7 +71,7 @@ public class App extends Application {
     private boolean symmetry = false;
     private int patternSize = 2;
     private Vector3<Integer> inputSize = new Vector3<>(6, 6, 6);
-    private Vector3<Integer> outputSize = new Vector3<>(10, 10, 10);
+    private Vector3<Integer> outputSize = new Vector3<>(3, 3, 3);
     private NeighbourStrategy neighbourStrategy = NeighbourStrategy.MATCH_EDGES;
 
     int[][][] inputArray;

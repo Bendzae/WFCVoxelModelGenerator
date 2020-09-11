@@ -40,6 +40,53 @@ public class Pattern3D {
         return values;
     }
 
+    /**
+     * Clockwise 90 degree rotation around the X axis
+     */
+    public Pattern3D getXRotated() {
+        int[][][] rotated = new int[size][size][size];
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                for (int z = 0; z < size; z++) {
+                    rotated[z][y][x] = get(x,size-z-1,y);
+                }
+            }
+        }
+        return new Pattern3D(size, rotated);
+    }
+
+    /**
+     * Clockwise 90 degree rotation around the Z axis
+     */
+    public Pattern3D getZRotated() {
+        int[][][] rotated = new int[size][size][size];
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                for (int z = 0; z < size; z++) {
+                    rotated[z][y][x] = get(y,size-x-1,z);
+                }
+            }
+        }
+        return new Pattern3D(size, rotated);
+    }
+
+    /**
+     * Clockwise 90 degree rotation around the y axis
+     */
+    public Pattern3D getYRotated() {
+        int[][][] rotated = new int[size][size][size];
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                for (int z = 0; z < size; z++) {
+                    rotated[z][y][x] = get(size-z-1,y,x);
+                }
+            }
+        }
+        return new Pattern3D(size, rotated);
+    }
+
+
+
 //    public int[] getEdge(Direction direction) {
 //        int[] edge = new int[size];
 //        switch (direction) {
