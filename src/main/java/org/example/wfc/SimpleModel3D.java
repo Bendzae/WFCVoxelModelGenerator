@@ -17,6 +17,7 @@ public class SimpleModel3D {
 
     public List<Pattern3D> patterns;
     public HashMap<Vector3<Integer>, Integer> patternsByPosition;
+    private int uniquePatternCount;
 
     public List<Double> patternFrequency;
     public Neighbours[] patternNeighbours;
@@ -281,11 +282,17 @@ public class SimpleModel3D {
                 }
             }
         }
-
+        this.uniquePatternCount = this.patterns.size();
         int totalPatternCount = (boundX / patternSize) * (boundY / patternSize) * (boundZ / patternSize);
         for (int i = 0; i < patternFrequency.size(); i++) {
             double repetitions = patternFrequency.get(i);
             patternFrequency.set(i, repetitions / totalPatternCount);
+        }
+
+        if(rotation) {
+            List<Pattern3D> yRotated = this.patterns.stream().map(p -> p.getYRotated()).collect(Collectors.toList());
+            this.patterns.addAll(yRotated);
+            this.patternFrequency.addAll(Collections.unmodifiableList(this.patternFrequency));
         }
     }
 
@@ -318,6 +325,20 @@ public class SimpleModel3D {
                 }
             }
         });
+
+        if(rotation) {
+            for (int i = 0; i < this.uniquePatternCount; i++) {
+                Neighbours originalNeighbours = this.patternNeighbours[i];
+
+                int finalI = i;
+                Arrays.stream(Direction3D.values()).forEach(direction -> {
+                    HashSet<Integer> originalPatterns = originalNeighbours.neighbours.get(direction);
+                    HashSet<Integer> rotatedPatterns = (HashSet<Integer>) originalPatterns.stream()
+                        .map(patternIndex -> patternIndex + this.uniquePatternCount).collect(Collectors.toSet());
+                    this.patternNeighbours[finalI + uniquePatternCount].neighbours.put(Utils.rotateYDir(direction), rotatedPatterns);
+                } );
+            }
+        }
     }
 
     private int getLowestEntropyCell() {

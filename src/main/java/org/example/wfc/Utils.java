@@ -34,5 +34,18 @@ public class Utils {
         return stringBuilder.toString();
     }
 
-
+    public static Direction3D rotateYDir(Direction3D direction3D) {
+        switch (direction3D) {
+            case LEFT:
+                return Direction3D.FORWARD;
+            case RIGHT:
+                return Direction3D.BACKWARD;
+            case FORWARD:
+                return Direction3D.RIGHT;
+            case BACKWARD:
+                return Direction3D.LEFT;
+            default:
+                return direction3D;
+        }
+    }
 }
