@@ -62,7 +62,8 @@ public class Grid3D {
                     try {
                         pattern.set(px, py, pz, get(position.getX() + px, position.getY() + py, position.getZ() + pz));
                     } catch (IllegalArgumentException ex) {
-                        pattern.set(px, py, pz, -1); //TODO better way to handle this?
+//                        pattern.set(px, py, pz, -1); //TODO better way to handle this?
+                        return null;
                     }
                 }
             }

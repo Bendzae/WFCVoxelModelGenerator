@@ -83,6 +83,7 @@ public class App extends Application {
   private int currentColor = 0;
   private boolean rotation = false;
   private boolean symmetry = false;
+  private boolean avoidEmptyPattern = false;
   private int patternSize = 2;
   private Vector3<Integer> inputSize = new Vector3<>(6, 6, 6);
   private Vector3<Integer> outputSize = new Vector3<>(3, 3, 3);
@@ -223,6 +224,8 @@ public class App extends Application {
     rotationCheckBox.setOnAction(actionEvent -> rotation = rotationCheckBox.isSelected());
     CheckBox symmetryCheckBox = new CheckBox("Symmetry");
     symmetryCheckBox.setOnAction(actionEvent -> symmetry = symmetryCheckBox.isSelected());
+    CheckBox avoidEmptyPatternCheckBox = new CheckBox("Avoid Empty Pattern");
+    avoidEmptyPatternCheckBox.setOnAction(actionEvent -> avoidEmptyPattern = avoidEmptyPatternCheckBox.isSelected());
 
     ObservableList<NeighbourStrategy> neighbourStrategies = FXCollections
         .observableArrayList(NeighbourStrategy.MATCH_EDGES, NeighbourStrategy.INPUT_NEIGHBOURS);
@@ -254,6 +257,7 @@ public class App extends Application {
         patternSizeTextField,
         rotationCheckBox,
         symmetryCheckBox,
+        avoidEmptyPatternCheckBox,
         neighbourStrategyComboBox,
         generateButton,
         showPatternsButton,
@@ -303,7 +307,7 @@ public class App extends Application {
     applicationState = ApplicationState.VIEW;
     boxes.getChildren().clear();
 
-    SimpleModel3D simpleModel3D = new SimpleModel3D(inputArray, patternSize, outputSize, rotation, symmetry);
+    SimpleModel3D simpleModel3D = new SimpleModel3D(inputArray, patternSize, outputSize, rotation, symmetry, avoidEmptyPattern);
     int[][][] solution = simpleModel3D.solve();
     if (solution != null) {
       boxes.getChildren().addAll(createBoxesFromVoxelArray(solution));
@@ -365,7 +369,7 @@ public class App extends Application {
   private void showPatterns() {
     applicationState = ApplicationState.VIEW;
     boxes.getChildren().clear();
-    SimpleModel3D simpleModel3D = new SimpleModel3D(inputArray, patternSize, outputSize, rotation, symmetry);
+    SimpleModel3D simpleModel3D = new SimpleModel3D(inputArray, patternSize, outputSize, rotation, symmetry, avoidEmptyPattern);
 
     simpleModel3D.patternsByPosition.forEach((pos, i) -> boxes.getChildren()
         .addAll(createBoxesFromVoxelArray(

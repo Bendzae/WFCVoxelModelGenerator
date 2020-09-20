@@ -17,6 +17,7 @@ public class SimpleModel3D {
   private int patternSize;
   private boolean rotation;
   private boolean symmetry;
+  private boolean avoidEmptyPattern;
   private int maximumTries = 5000;
   private int maxPropagationTries = 10;
 
@@ -34,11 +35,12 @@ public class SimpleModel3D {
 
   private Double baseEntropy;
 
-  public SimpleModel3D(int[][][] input, int patternSize, Vector3<Integer> outputSize, boolean rotation, boolean symmetry) {
+  public SimpleModel3D(int[][][] input, int patternSize, Vector3<Integer> outputSize, boolean rotation, boolean symmetry, boolean avoidEmptyPattern) {
     this.input = new Grid3D(input);
     this.patternSize = patternSize;
     this.rotation = rotation;
     this.symmetry = symmetry;
+    this.avoidEmptyPattern = avoidEmptyPattern;
 //        int calculatedOutputSize = outputSize.x / (patternSize - 1);
 //        this.outputSize = new Vector2i(calculatedOutputSize, calculatedOutputSize);
     this.outputSize = outputSize;
@@ -50,6 +52,7 @@ public class SimpleModel3D {
 //            throw new RuntimeException("input size should be divisible by pattern size (for now)");
 //        }
 
+    System.out.println("Input size: " + this.input.size());
     findPatterns();
     findNeighbours();
   }
@@ -294,7 +297,7 @@ public class SimpleModel3D {
               } else {
                 int patternIndex = this.patterns.indexOf(pattern);
                 this.patternsByPosition.put(patternPosition, patternIndex);
-                if (patternIndex != 0) { //dont count empty pattern to discourage empty solution TODO remove later
+                if (!avoidEmptyPattern || patternIndex != 0) { //dont count empty pattern to discourage empty solution TODO remove later
                   Double patternFrequency = this.patternFrequency.get(patternIndex);
                   this.patternFrequency.set(patternIndex, patternFrequency + 1);
                 }
@@ -345,12 +348,12 @@ public class SimpleModel3D {
       this.patternNeighbours[i] = new Neighbours();
     }
 
-    for (int i = 0; i < 6; i++) {
-      Direction3D dir = Direction3D.values()[i];
-      for (int j = 0; j < patterns.size(); j++) {
-        this.patternNeighbours[0].addNeighbour(dir, j);
-      }
-    }
+//    for (int i = 0; i < 6; i++) {
+//      Direction3D dir = Direction3D.values()[i];
+//      for (int j = 0; j < patterns.size(); j++) {
+//        this.patternNeighbours[0].addNeighbour(dir, j);
+//      }
+//    }
 
     patternsByPosition.forEach((position, patternIndex) -> {
       for (int i = 0; i < 6; i++) {
@@ -361,10 +364,14 @@ public class SimpleModel3D {
             new Vector3<>(position.getX() + dirV.getX(), position.getY() + dirV.getY(), position.getZ() + dirV.getZ());
 
         if (patternsByPosition.containsKey(newPos)) {
+          if(patternIndex == 3 && dir == Direction3D.DOWN) {
+            System.out.println("Added Pattern: " + patternsByPosition.get(newPos));
+          }
           this.patternNeighbours[patternIndex].addNeighbour(dir, patternsByPosition.get(newPos));
-        } else {
-          this.patternNeighbours[patternIndex].addNeighbour(dir, 0);
         }
+//        else {
+//          this.patternNeighbours[patternIndex].addNeighbour(dir, 0);
+//        }
       }
     });
 
