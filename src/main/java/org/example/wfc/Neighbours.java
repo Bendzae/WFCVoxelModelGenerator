@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.stream.Stream;
 
-class Neighbours {
+public class Neighbours {
 
   public HashMap<Direction3D, HashSet<Integer>> neighbours;
 

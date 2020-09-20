@@ -47,6 +47,8 @@ import org.example.voxparser.VoxModel;
 import org.example.voxparser.VoxReader;
 import org.example.wfc.Direction3D;
 import org.example.wfc.NeighbourStrategy;
+import org.example.wfc.Neighbours;
+import org.example.wfc.Pattern3D;
 import org.example.wfc.SimpleModel3D;
 import org.example.wfc.Tile3D;
 
@@ -311,14 +313,42 @@ public class App extends Application {
   private void generateWithTileset() {
     ArrayList<Tile3D> tiles = new ArrayList<>();
 
+    Tile3D zero = new Tile3D(2, new Pattern3D(2).getRawArray());
     Tile3D one = new Tile3D(2, loadVoxModelAs3DArray("inputmodels/tilesets/test/one.vox"));
     Tile3D two = new Tile3D(2, loadVoxModelAs3DArray("inputmodels/tilesets/test/two.vox"));
 
     Arrays.stream(Direction3D.values()).forEach(direction3D -> {
-      one.addNeighbour(direction3D, 1);
+      one.addNeighbour(direction3D, 0);
       two.addNeighbour(direction3D, 0);
+      zero.addNeighbour(direction3D, 0);
+      zero.addNeighbour(direction3D, 1);
+      zero.addNeighbour(direction3D, 2);
     });
 
+    one.getNeighbours().neighbours.get(Direction3D.UP).clear();
+    one.getNeighbours().neighbours.get(Direction3D.DOWN).clear();
+    one.addNeighbour(Direction3D.UP, 2);
+
+    one.addNeighbour(Direction3D.UP, 1);
+    one.addNeighbour(Direction3D.DOWN, 1);
+
+    one.addNeighbour(Direction3D.LEFT, 1);
+    one.addNeighbour(Direction3D.RIGHT, 1);
+    one.addNeighbour(Direction3D.FORWARD, 1);
+    one.addNeighbour(Direction3D.BACKWARD, 1);
+
+    two.getNeighbours().neighbours.get(Direction3D.DOWN).clear();
+    two.addNeighbour(Direction3D.DOWN, 1);
+
+    two.addNeighbour(Direction3D.UP, 2);
+    two.addNeighbour(Direction3D.DOWN, 2);
+
+    two.addNeighbour(Direction3D.LEFT, 2);
+    two.addNeighbour(Direction3D.RIGHT, 2);
+    two.addNeighbour(Direction3D.FORWARD, 2);
+    two.addNeighbour(Direction3D.BACKWARD, 2);
+
+    tiles.add(zero);
     tiles.add(one);
     tiles.add(two);
 
