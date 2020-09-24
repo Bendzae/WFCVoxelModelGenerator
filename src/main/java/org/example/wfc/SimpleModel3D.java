@@ -23,7 +23,7 @@ public class SimpleModel3D {
 
   public List<Pattern3D> patterns;
   public HashMap<Vector3<Integer>, Integer> patternsByPosition;
-  private List<Integer> yRotatedPatterns; //Maps original pattern index -> rotated pattern index in patterns List
+  private HashMap<Integer,Integer> yRotatedPatterns; //Maps original pattern index -> rotated pattern index in patterns List
   private int uniquePatternCount;
 
   public List<Double> patternFrequency;
@@ -336,11 +336,11 @@ public class SimpleModel3D {
       var y = input.size().getY() / patternSize;
       var z = input.size().getZ() / patternSize;
       double freqWithoutPadding = this.patternFrequency.get(0) - ((x * y * z) - ((x-2) * (y-1) * (z-2)));
-      this.patternFrequency.set(0, freqWithoutPadding > 0 ? freqWithoutPadding + 3/* TODO magic number remove */  : 0.01);
+      this.patternFrequency.set(0, freqWithoutPadding > 0 ? freqWithoutPadding /* + 3 TODO magic number remove */  : 0.01);
     }
 
     if (rotation) {
-      this.yRotatedPatterns = new ArrayList<>();
+      this.yRotatedPatterns = new HashMap<>();
       List<Pattern3D> yRotated = this.patterns.stream().map(p -> p.getYRotated()).collect(Collectors.toList());
       for (int i = 0; i < yRotated.size(); i++) {
         Pattern3D pattern = yRotated.get(i);
@@ -349,7 +349,7 @@ public class SimpleModel3D {
         }
         int patternIndex = this.patterns.indexOf(pattern);
 
-        yRotatedPatterns.add(i, patternIndex);
+        yRotatedPatterns.put(i, patternIndex);
 
         if (this.patternFrequency.size() > patternIndex) {
           Double patternFrequency = this.patternFrequency.get(patternIndex);
@@ -358,6 +358,7 @@ public class SimpleModel3D {
           this.patternFrequency.add(patternIndex, 1d);
         }
       }
+      this.yRotatedPatterns.put(-1,-1);
     }
 
     int totalPatternCount = (boundX / patternSize) * (boundY / patternSize) * (boundZ / patternSize);
@@ -409,7 +410,7 @@ public class SimpleModel3D {
     });
 
     if (rotation) {
-      for (int i = 1; i < this.uniquePatternCount; i++) {
+      for (int i = -1; i < this.uniquePatternCount; i++) {
         Neighbours originalNeighbours = this.patternNeighbours.get(i);
 
         int finalI = i;
