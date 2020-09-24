@@ -27,7 +27,7 @@ public class SimpleModel3D {
   private int uniquePatternCount;
 
   public List<Double> patternFrequency;
-  public Neighbours[] patternNeighbours;
+  public HashMap<Integer, Neighbours> patternNeighbours;
 
   public List<List<Integer>> wave;
   public List<Double> entropy;
@@ -36,14 +36,19 @@ public class SimpleModel3D {
   private Double baseEntropy;
 
   public SimpleModel3D(int[][][] input, int patternSize, Vector3<Integer> outputSize, boolean rotation, boolean symmetry, boolean avoidEmptyPattern) {
-    this.input = new Grid3D(input);
+    boolean inputPadding = true;
+    if(inputPadding) {
+      this.input = new Grid3D(input, patternSize);
+    } else {
+      this.input = new Grid3D(input);
+    }
     this.patternSize = patternSize;
     this.rotation = rotation;
     this.symmetry = symmetry;
     this.avoidEmptyPattern = avoidEmptyPattern;
 //        int calculatedOutputSize = outputSize.x / (patternSize - 1);
 //        this.outputSize = new Vector2i(calculatedOutputSize, calculatedOutputSize);
-    this.outputSize = outputSize;
+    this.outputSize = new Vector3<>(outputSize.getX() , outputSize.getY() + 2, outputSize.getZ());
 
     //TODO Remove later
 //        if (this.input.size().getX() % patternSize != 0
@@ -67,18 +72,24 @@ public class SimpleModel3D {
         .collect(Collectors.toList());
     this.patternFrequency = tiles.stream().map(tile -> (double) tile.getFrequency()).collect(Collectors.toList());
     normalizePatternFrequency(tiles.size());
-    this.patternNeighbours = tiles.stream().map(tile3D -> tile3D.getNeighbours()).toArray(Neighbours[]::new);
+    this.patternNeighbours = new HashMap<>();
+    for (int i = 0; i < tiles.size(); i++) {
+      this.patternNeighbours.put(i, tiles.get(i).getNeighbours());
+    }
   }
 
   ;
 
   public int[][][] solve() {
-    initializeWave();
+    ArrayList<Integer> borderCells = initializeWave();
     baseEntropy = getEntropy(0);
     int collapsedCells = 0;
     int tries = 0;
     int propagationTries = 0;
     this.entropy = wave.stream().map(this::getEntropy).collect(Collectors.toList());
+
+    borderCells.forEach(this::propagate);
+
     while (collapsedCells < outputSize.getX() * outputSize.getY() * outputSize.getZ() && tries < maximumTries) {
       //create backup if propagation fails
       List<List<Integer>> snapshot = new ArrayList<>();
@@ -157,11 +168,13 @@ public class SimpleModel3D {
         }
         List<Integer> neighbourCell = getWaveAt(neighbourPosition.getX(), neighbourPosition.getY(), neighbourPosition.getZ());
 
+        if(neighbourCell.size() == 1 && neighbourCell.get(0) == -1) continue;
+
         HashSet<Integer> possiblePatterns = new HashSet<>();
         List<Integer> currentPatterns = wave.get(currentCell);
         for (Integer pattern : currentPatterns) {
           List<Integer> patterns = neighbourCell.stream()
-              .filter(neighbourPattern -> patternNeighbours[pattern].neighbours.get(direction).contains(neighbourPattern))
+              .filter(neighbourPattern -> patternNeighbours.get(pattern).neighbours.get(direction).contains(neighbourPattern))
               .collect(Collectors.toList());
           possiblePatterns.addAll(patterns);
         }
@@ -182,20 +195,28 @@ public class SimpleModel3D {
     return true;
   }
 
-  private void initializeWave() {
+  private ArrayList<Integer> initializeWave() {
+    ArrayList<Integer> borderCells = new ArrayList<>();
     wave = new ArrayList<>();
-
     for (int x = 0; x < outputSize.getX(); x++) {
       for (int y = 0; y < outputSize.getY(); y++) {
         for (int z = 0; z < outputSize.getZ(); z++) {
           wave.add(new ArrayList<>());
           List<Integer> waveCell = wave.get(wave.size() - 1);
-          for (int i = 0; i < patterns.size(); i++) {
-            waveCell.add(i);
+          if(y == 0 || y == outputSize.getY() - 1) {
+            waveCell.add(-1);
+            borderCells.add(wave.size() - 1);
+          }
+          else {
+            for (int i = 0; i < patterns.size(); i++) {
+              waveCell.add(i);
+            }
           }
         }
       }
     }
+
+    return borderCells;
   }
 
   private int[][][] generateOutput() {
@@ -206,7 +227,8 @@ public class SimpleModel3D {
     for (int z = 0; z < outputSize.getZ(); z++) {
       for (int y = 0; y < outputSize.getY(); y++) {
         for (int x = 0; x < outputSize.getX(); x++) {
-          Pattern3D pattern = patterns.get(getWaveAt(x, y, z).get(0));
+          Integer patternIndex = getWaveAt(x, y, z).get(0);
+          Pattern3D pattern = patternIndex >= 0 ? patterns.get(patternIndex) : new Pattern3D(this.patternSize);
           for (int px = 0; px < patternSize; px++) {
             for (int py = 0; py < patternSize; py++) {
               for (int pz = 0; pz < patternSize; pz++) {
@@ -308,6 +330,14 @@ public class SimpleModel3D {
       }
     }
     this.uniquePatternCount = this.patterns.size();
+    if(!avoidEmptyPattern) {
+      //remove all the emplty patterns from padding
+      var x = input.size().getX() / patternSize;
+      var y = input.size().getY() / patternSize;
+      var z = input.size().getZ() / patternSize;
+      double freqWithoutPadding = this.patternFrequency.get(0) - ((x * y * z) - ((x-2) * (y-1) * (z-2)));
+      this.patternFrequency.set(0, freqWithoutPadding > 0 ? freqWithoutPadding + 3/* TODO magic number remove */  : 0.01);
+    }
 
     if (rotation) {
       this.yRotatedPatterns = new ArrayList<>();
@@ -343,10 +373,12 @@ public class SimpleModel3D {
 
   private void findNeighbours() {
 
-    this.patternNeighbours = new Neighbours[this.patterns.size()];
+    this.patternNeighbours = new HashMap<>();
     for (int i = 0; i < patterns.size(); i++) {
-      this.patternNeighbours[i] = new Neighbours();
+      this.patternNeighbours.put(i, new Neighbours());
     }
+    // Border Pattern
+    this.patternNeighbours.put(-1, new Neighbours());
 
 //    for (int i = 0; i < 6; i++) {
 //      Direction3D dir = Direction3D.values()[i];
@@ -367,17 +399,18 @@ public class SimpleModel3D {
           if(patternIndex == 3 && dir == Direction3D.DOWN) {
             System.out.println("Added Pattern: " + patternsByPosition.get(newPos));
           }
-          this.patternNeighbours[patternIndex].addNeighbour(dir, patternsByPosition.get(newPos));
+          this.patternNeighbours.get(patternIndex).addNeighbour(dir, patternsByPosition.get(newPos));
         }
-//        else {
-//          this.patternNeighbours[patternIndex].addNeighbour(dir, 0);
-//        }
+        else {
+          this.patternNeighbours.get(patternIndex).addNeighbour(dir, -1);
+          this.patternNeighbours.get(-1).addNeighbour(Utils.opposite(dir), patternIndex);
+        }
       }
     });
 
     if (rotation) {
       for (int i = 1; i < this.uniquePatternCount; i++) {
-        Neighbours originalNeighbours = this.patternNeighbours[i];
+        Neighbours originalNeighbours = this.patternNeighbours.get(i);
 
         int finalI = i;
         Arrays.stream(Direction3D.values()).forEach(direction -> {
@@ -385,7 +418,7 @@ public class SimpleModel3D {
           HashSet<Integer> rotatedPatterns = (HashSet<Integer>) originalPatterns.stream()
               .map(patternIndex -> yRotatedPatterns.get(patternIndex)).collect(Collectors.toSet());
 
-          rotatedPatterns.forEach(rotatedPattern -> this.patternNeighbours[yRotatedPatterns.get(finalI)]
+          rotatedPatterns.forEach(rotatedPattern -> this.patternNeighbours.get(yRotatedPatterns.get(finalI))
               .addNeighbour(Utils.rotateYDir(direction), rotatedPattern));
         });
       }

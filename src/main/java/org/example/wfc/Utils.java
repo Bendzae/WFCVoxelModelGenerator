@@ -48,4 +48,23 @@ public class Utils {
                 return direction3D;
         }
     }
+    public static Direction3D opposite(Direction3D direction3D) {
+        switch (direction3D) {
+            case LEFT:
+                return Direction3D.RIGHT;
+            case RIGHT:
+                return Direction3D.LEFT;
+            case FORWARD:
+                return Direction3D.BACKWARD;
+            case BACKWARD:
+                return Direction3D.FORWARD;
+            case UP:
+                return Direction3D.DOWN;
+            case DOWN:
+                return Direction3D.UP;
+            default:
+                return direction3D;
+        }
+    }
+
 }

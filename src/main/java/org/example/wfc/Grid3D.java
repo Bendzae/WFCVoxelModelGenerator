@@ -9,9 +9,26 @@ public class Grid3D {
     private int[][][] grid;
     private final Vector3<Integer> size;
 
-    public Grid3D(int[][][] grid) {
-        this.grid = grid;
-        this.size = new Vector3<>(grid[0][0].length, grid[0].length, grid.length);
+    public Grid3D(int[][][] input) {
+        this.grid = input;
+        this.size = new Vector3<>(input[0][0].length, input[0].length, input.length);
+    }
+    public Grid3D(int[][][] input, int padding) {
+        Vector3<Integer> inputSize = new Vector3<>(input[0][0].length, input[0].length, input.length);
+        this.size = new Vector3<>(inputSize.getX() + padding * 2, inputSize.getY() + padding, inputSize.getZ() + padding * 2);
+        this.grid = new int[size().getZ()][size().getY()][size().getX()];
+
+        for (int px = 0; px < size().getX(); px++) {
+            for (int py = 0; py < size().getY() ; py++) {
+                for (int pz = 0; pz < size().getZ(); pz++) {
+                    if(px < padding || px >= size().getX() - padding || py < padding || pz < padding || pz >= size().getZ() - padding) {
+                        this.grid[pz][py][px] = -1;
+                    } else {
+                        this.grid[pz][py][px] = input[pz - padding][py-padding][px-padding];
+                    }
+                }
+            }
+        }
     }
 
     public Grid3D(Vector3<Integer> size) {
