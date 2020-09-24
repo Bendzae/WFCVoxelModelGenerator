@@ -410,7 +410,7 @@ public class SimpleModel3D {
     });
 
     if (rotation) {
-      for (int i = -1; i < this.uniquePatternCount; i++) {
+      for (int i = 0; i < this.uniquePatternCount; i++) {
         Neighbours originalNeighbours = this.patternNeighbours.get(i);
 
         int finalI = i;
