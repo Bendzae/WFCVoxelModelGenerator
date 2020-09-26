@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Grid3D {
+
     private int[][][] grid;
     private final Vector3<Integer> size;
 
@@ -88,42 +89,22 @@ public class Grid3D {
         return pattern;
     }
 
-    public List<Pattern> getRotatedPatterns(Pattern pattern) {
-        List<Pattern> rotatedPatterns = new ArrayList<>();
-        int size = pattern.getSize();
-        Pattern current = pattern;
-        for (int i = 0; i < 3; i++) {
-            Pattern rotated = new Pattern(size);
-            for (int x = 0; x < size; ++x) {
-                for (int y = 0; y < size; ++y) {
-                    rotated.set(x, y, current.get(y, size - x - 1));
+    /**
+     * Clockwise 90 degree rotation around the y axis
+     */
+    public Grid3D getYRotated() {
+        Integer sizeX = size().getZ();
+        Integer sizeY = size().getY();
+        Integer sizeZ = size().getX();
+        int[][][] rotated = new int[sizeZ][sizeY][sizeX];
+        for (int x = 0; x < sizeX; x++) {
+            for (int y = 0; y < sizeY; y++) {
+                for (int z = 0; z < sizeZ; z++) {
+                    rotated[z][y][x] = get(sizeZ-z-1,y,x);
                 }
             }
-            current = rotated;
-            rotatedPatterns.add(rotated);
         }
-        return rotatedPatterns;
-    }
-
-    public List<Pattern> getReflectedPatterns(Pattern pattern) {
-        List<Pattern> reflectedPatterns = new ArrayList<>();
-        int size = pattern.getSize();
-        Pattern reflectedY = new Pattern(size);
-        for (int x = 0; x < size; ++x) {
-            for (int y = 0; y < size; ++y) {
-                reflectedY.set(x, y, pattern.get(x, size - y - 1));
-            }
-        }
-        reflectedPatterns.add(reflectedY);
-
-        Pattern reflectedX = new Pattern(size);
-        for (int x = 0; x < size; ++x) {
-            for (int y = 0; y < size; ++y) {
-                reflectedX.set(x, y, pattern.get(size - x - 1, y));
-            }
-        }
-        reflectedPatterns.add(reflectedX);
-        return reflectedPatterns;
+        return new Grid3D(rotated);
     }
 
     private void checkBounds(int x, int y, int z) {
