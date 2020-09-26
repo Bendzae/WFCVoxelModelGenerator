@@ -1,7 +1,6 @@
 package org.example.wfc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,13 +16,13 @@ public class SimpleModel3D {
   private int patternSize;
   private boolean rotation;
   private boolean symmetry;
-  private boolean avoidEmptyPattern;
+  private double avoidEmptyPattern;
   private int maximumTries = 5000;
   private int maxPropagationTries = 10;
 
   public List<Pattern3D> patterns;
-  public HashMap<Vector3<Integer>, Integer> patternsByPosition;
-  private HashMap<Integer,Integer> yRotatedPatterns; //Maps original pattern index -> rotated pattern index in patterns List
+  public List<HashMap<Vector3<Integer>, Integer>> patternsByPosition;
+  private HashMap<Integer, Integer> yRotatedPatterns; //Maps original pattern index -> rotated pattern index in patterns List
   private int uniquePatternCount;
 
   public List<Double> patternFrequency;
@@ -35,9 +34,16 @@ public class SimpleModel3D {
 
   private Double baseEntropy;
 
-  public SimpleModel3D(int[][][] input, int patternSize, Vector3<Integer> outputSize, boolean rotation, boolean symmetry, boolean avoidEmptyPattern) {
+  public SimpleModel3D(
+      int[][][] input,
+      int patternSize,
+      Vector3<Integer> outputSize,
+      boolean rotation,
+      boolean symmetry,
+      double avoidEmptyPattern
+  ) {
     boolean inputPadding = true;
-    if(inputPadding) {
+    if (inputPadding) {
       this.input = new Grid3D(input, patternSize);
     } else {
       this.input = new Grid3D(input);
@@ -168,7 +174,9 @@ public class SimpleModel3D {
         }
         List<Integer> neighbourCell = getWaveAt(neighbourPosition.getX(), neighbourPosition.getY(), neighbourPosition.getZ());
 
-        if(neighbourCell.size() == 1 && neighbourCell.get(0) == -1) continue;
+        if (neighbourCell.size() == 1 && neighbourCell.get(0) == -1) {
+          continue;
+        }
 
         HashSet<Integer> possiblePatterns = new HashSet<>();
         List<Integer> currentPatterns = wave.get(currentCell);
@@ -203,15 +211,13 @@ public class SimpleModel3D {
         for (int z = 0; z < outputSize.getZ(); z++) {
           wave.add(new ArrayList<>());
           List<Integer> waveCell = wave.get(wave.size() - 1);
-          if(y == 0 || y == outputSize.getY() - 1) {
+          if (y == 0 || y == outputSize.getY() - 1) {
             waveCell.add(-1);
             borderCells.add(wave.size() - 1);
-          }
-          else if (x == 0 || x == outputSize.getX() - 1 || z == 0 || z == outputSize.getZ() - 1) {
+          } else if (x == 0 || x == outputSize.getX() - 1 || z == 0 || z == outputSize.getZ() - 1) {
             waveCell.add(0);
             borderCells.add(wave.size() - 1);
-          }
-          else {
+          } else {
             for (int i = 0; i < patterns.size(); i++) {
               waveCell.add(i);
             }
@@ -291,39 +297,45 @@ public class SimpleModel3D {
   }
 
   public void findPatterns() {
+
+    ArrayList<Grid3D> inputs = new ArrayList<>();
+    inputs.add(input);
+    if (rotation) {
+      for (int i = 0; i < 3; i++) {
+        inputs.add(inputs.get(inputs.size() - 1).getYRotated());
+      }
+    }
+
     Pattern3D emptyPattern = new Pattern3D(patternSize);
     this.patterns = new ArrayList<>();
     //Add empty pattern at pos 0
     this.patterns.add(emptyPattern);
-    this.patternsByPosition = new HashMap<>();
+    this.patternsByPosition = new ArrayList<>();
     this.patternFrequency = new ArrayList<>();
     this.patternFrequency.add(0.000001);
-    int boundX = input.size().getX();
-    int boundY = input.size().getY();
-    int boundZ = input.size().getZ();
-    for (int x = 0; x <= boundX; x += patternSize) {
-      for (int y = 0; y <= boundY; y += patternSize) {
-        for (int z = 0; z <= boundZ; z += patternSize) {
-          ArrayList<Pattern3D> tempPatterns = new ArrayList<>();
-          Pattern3D currentPattern = input.getPatternAtPosition(new Vector3(x, y, z), patternSize);
-          if (currentPattern != null) {
-            tempPatterns.add(currentPattern);
-//                    if (rotation) {
-//                        tempPatterns.addAll(input.getRotatedPatterns(currentPattern));
-//                    }
-//                    if (symmetry) {
-//                        tempPatterns.addAll(input.getReflectedPatterns(currentPattern));
-//                    }
-            Vector3<Integer> patternPosition = new Vector3<>(x / patternSize, y / patternSize, z / patternSize);
-            for (Pattern3D pattern : tempPatterns) {
-              if (!this.patterns.contains(pattern)) {
-                this.patterns.add(pattern);
-                this.patternsByPosition.put(patternPosition, patterns.size() - 1);
-                this.patternFrequency.add(1d);
-              } else {
-                int patternIndex = this.patterns.indexOf(pattern);
-                this.patternsByPosition.put(patternPosition, patternIndex);
-                if (!avoidEmptyPattern || patternIndex != 0) { //dont count empty pattern to discourage empty solution TODO remove later
+
+    for (int i = 0; i < inputs.size(); i++) {
+      Grid3D currentInput = inputs.get(i);
+      int boundX = currentInput.size().getX();
+      int boundY = currentInput.size().getY();
+      int boundZ = currentInput.size().getZ();
+      patternsByPosition.add(new HashMap<>());
+      for (int x = 0; x <= boundX; x += patternSize) {
+        for (int y = 0; y <= boundY; y += patternSize) {
+          for (int z = 0; z <= boundZ; z += patternSize) {
+            ArrayList<Pattern3D> tempPatterns = new ArrayList<>();
+            Pattern3D currentPattern = currentInput.getPatternAtPosition(new Vector3(x, y, z), patternSize);
+            if (currentPattern != null) {
+              tempPatterns.add(currentPattern);
+              Vector3<Integer> patternPosition = new Vector3<>(x / patternSize, y / patternSize, z / patternSize);
+              for (Pattern3D pattern : tempPatterns) {
+                if (!this.patterns.contains(pattern)) {
+                  this.patterns.add(pattern);
+                  this.patternsByPosition.get(i).put(patternPosition, patterns.size() - 1);
+                  this.patternFrequency.add(1d);
+                } else {
+                  int patternIndex = this.patterns.indexOf(pattern);
+                  this.patternsByPosition.get(i).put(patternPosition, patternIndex);
                   Double patternFrequency = this.patternFrequency.get(patternIndex);
                   this.patternFrequency.set(patternIndex, patternFrequency + 1);
                 }
@@ -334,39 +346,26 @@ public class SimpleModel3D {
       }
     }
     this.uniquePatternCount = this.patterns.size();
-    if(!avoidEmptyPattern) {
-      //remove all the emplty patterns from padding
-      var x = input.size().getX() / patternSize;
-      var y = input.size().getY() / patternSize;
-      var z = input.size().getZ() / patternSize;
-      double freqWithoutPadding = this.patternFrequency.get(0) - ((x * y * z) - ((x-2) * (y-1) * (z-2)));
-      this.patternFrequency.set(0, freqWithoutPadding > 0 ? freqWithoutPadding /* + 3 TODO magic number remove */  : 0.01);
-    }
 
+    //remove all the emplty patterns from padding
+    var x = input.size().getX() / patternSize;
+    var y = input.size().getY() / patternSize;
+    var z = input.size().getZ() / patternSize;
+    int padding = (x * y * z) - ((x - 2) * (y - 1) * (z - 2));
     if (rotation) {
-      this.yRotatedPatterns = new HashMap<>();
-      List<Pattern3D> yRotated = this.patterns.stream().map(p -> p.getYRotated()).collect(Collectors.toList());
-      for (int originalIndex = 0; originalIndex < yRotated.size(); originalIndex++) {
-        Pattern3D pattern = yRotated.get(originalIndex);
-        if (!this.patterns.contains(pattern)) {
-          this.patterns.add(pattern);
-        }
-        int patternIndex = this.patterns.indexOf(pattern);
-
-        yRotatedPatterns.put(originalIndex, patternIndex);
-
-        if (this.patternFrequency.size() > patternIndex) {
-          Double patternFrequency = this.patternFrequency.get(patternIndex);
-          this.patternFrequency.set(patternIndex, patternFrequency + 1);
-        } else {
-          this.patternFrequency.add(patternIndex, 1d);
-          assert this.patternFrequency.size() == (patternIndex + 1);
-        }
-      }
-      this.yRotatedPatterns.put(-1,-1);
+      padding *= 4;
     }
+    double freqWithoutPadding = this.patternFrequency.get(0) - padding;
+    this.patternFrequency.set(
+        0,
+        freqWithoutPadding > 0 ? freqWithoutPadding * (1 - avoidEmptyPattern) /* + 3 TODO magic number remove */ : 0.01
+    );
 
-    int totalPatternCount = (boundX / patternSize) * (boundY / patternSize) * (boundZ / patternSize);
+    int totalPatternCount =
+        (input.size().getX() / patternSize) * (input.size().getY() / patternSize) * (input.size().getZ() / patternSize);
+    if (rotation) {
+      totalPatternCount *= 4;
+    }
     normalizePatternFrequency(totalPatternCount);
   }
 
@@ -393,39 +392,24 @@ public class SimpleModel3D {
 //      }
 //    }
 
-    patternsByPosition.forEach((position, patternIndex) -> {
-      for (int i = 0; i < 6; i++) {
-        Direction3D dir = Direction3D.values()[i];
-        Vector3<Integer> dirV = Utils.DIRECTIONS3D.get(i);
+    patternsByPosition.forEach(currentRotation -> {
+      currentRotation.forEach((position, patternIndex) -> {
+        for (int i = 0; i < 6; i++) {
+          Direction3D dir = Direction3D.values()[i];
+          Vector3<Integer> dirV = Utils.DIRECTIONS3D.get(i);
 
-        Vector3<Integer> newPos =
-            new Vector3<>(position.getX() + dirV.getX(), position.getY() + dirV.getY(), position.getZ() + dirV.getZ());
+          Vector3<Integer> newPos =
+              new Vector3<>(position.getX() + dirV.getX(), position.getY() + dirV.getY(), position.getZ() + dirV.getZ());
 
-        if (patternsByPosition.containsKey(newPos)) {
-          this.patternNeighbours.get(patternIndex).addNeighbour(dir, patternsByPosition.get(newPos));
+          if (currentRotation.containsKey(newPos)) {
+            this.patternNeighbours.get(patternIndex).addNeighbour(dir, currentRotation.get(newPos));
+          } else {
+            this.patternNeighbours.get(patternIndex).addNeighbour(dir, -1);
+            this.patternNeighbours.get(-1).addNeighbour(Utils.opposite(dir), patternIndex);
+          }
         }
-        else {
-          this.patternNeighbours.get(patternIndex).addNeighbour(dir, -1);
-          this.patternNeighbours.get(-1).addNeighbour(Utils.opposite(dir), patternIndex);
-        }
-      }
+      });
     });
-
-    if (rotation) {
-      for (int i = 0; i < this.uniquePatternCount; i++) {
-        Neighbours originalNeighbours = this.patternNeighbours.get(i);
-
-        int finalI = i;
-        Arrays.stream(Direction3D.values()).forEach(direction -> {
-          HashSet<Integer> originalPatterns = originalNeighbours.neighbours.get(direction);
-          HashSet<Integer> rotatedPatterns = (HashSet<Integer>) originalPatterns.stream()
-              .map(patternIndex -> yRotatedPatterns.get(patternIndex)).collect(Collectors.toSet());
-
-          rotatedPatterns.forEach(rotatedPattern -> this.patternNeighbours.get(yRotatedPatterns.get(finalI))
-              .addNeighbour(Utils.rotateYDir(direction), rotatedPattern));
-        });
-      }
-    }
   }
 
   private int getLowestEntropyCell() {
