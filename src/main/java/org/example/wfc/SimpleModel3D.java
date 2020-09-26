@@ -48,7 +48,7 @@ public class SimpleModel3D {
     this.avoidEmptyPattern = avoidEmptyPattern;
 //        int calculatedOutputSize = outputSize.x / (patternSize - 1);
 //        this.outputSize = new Vector2i(calculatedOutputSize, calculatedOutputSize);
-    this.outputSize = new Vector3<>(outputSize.getX() , outputSize.getY() + 2, outputSize.getZ());
+    this.outputSize = new Vector3<>(outputSize.getX() + 2, outputSize.getY() + 2, outputSize.getZ() + 2);
 
     //TODO Remove later
 //        if (this.input.size().getX() % patternSize != 0
@@ -207,6 +207,10 @@ public class SimpleModel3D {
             waveCell.add(-1);
             borderCells.add(wave.size() - 1);
           }
+          else if (x == 0 || x == outputSize.getX() - 1 || z == 0 || z == outputSize.getZ() - 1) {
+            waveCell.add(0);
+            borderCells.add(wave.size() - 1);
+          }
           else {
             for (int i = 0; i < patterns.size(); i++) {
               waveCell.add(i);
@@ -342,20 +346,21 @@ public class SimpleModel3D {
     if (rotation) {
       this.yRotatedPatterns = new HashMap<>();
       List<Pattern3D> yRotated = this.patterns.stream().map(p -> p.getYRotated()).collect(Collectors.toList());
-      for (int i = 0; i < yRotated.size(); i++) {
-        Pattern3D pattern = yRotated.get(i);
+      for (int originalIndex = 0; originalIndex < yRotated.size(); originalIndex++) {
+        Pattern3D pattern = yRotated.get(originalIndex);
         if (!this.patterns.contains(pattern)) {
           this.patterns.add(pattern);
         }
         int patternIndex = this.patterns.indexOf(pattern);
 
-        yRotatedPatterns.put(i, patternIndex);
+        yRotatedPatterns.put(originalIndex, patternIndex);
 
         if (this.patternFrequency.size() > patternIndex) {
           Double patternFrequency = this.patternFrequency.get(patternIndex);
           this.patternFrequency.set(patternIndex, patternFrequency + 1);
         } else {
           this.patternFrequency.add(patternIndex, 1d);
+          assert this.patternFrequency.size() == (patternIndex + 1);
         }
       }
       this.yRotatedPatterns.put(-1,-1);
@@ -397,9 +402,6 @@ public class SimpleModel3D {
             new Vector3<>(position.getX() + dirV.getX(), position.getY() + dirV.getY(), position.getZ() + dirV.getZ());
 
         if (patternsByPosition.containsKey(newPos)) {
-          if(patternIndex == 3 && dir == Direction3D.DOWN) {
-            System.out.println("Added Pattern: " + patternsByPosition.get(newPos));
-          }
           this.patternNeighbours.get(patternIndex).addNeighbour(dir, patternsByPosition.get(newPos));
         }
         else {
