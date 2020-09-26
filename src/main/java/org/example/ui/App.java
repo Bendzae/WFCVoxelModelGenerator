@@ -76,12 +76,12 @@ public class App extends Application {
   private int[] palette = ColorUtils.DEFAULT_PALETTE;
 
   //WFC Parameters
-  private boolean rotation = false;
+  private boolean rotation = true;
   private boolean symmetry = false;
   private double avoidEmptyPattern = 0;
   private int patternSize = 2;
   private Vector3<Integer> inputSize = new Vector3<>(6, 6, 6);
-  private Vector3<Integer> outputSize = new Vector3<>(3, 3, 3);
+  private Vector3<Integer> outputSize = new Vector3<>(15, 8, 15);
 
   int[][][] inputArray;
   private SmartGroup boxes;
@@ -184,13 +184,17 @@ public class App extends Application {
     patternSizeTextField.setText(String.valueOf(patternSize));
 
     CheckBox rotationCheckBox = new CheckBox("Rotation");
+    rotationCheckBox.setSelected(rotation);
     rotationCheckBox.setOnAction(actionEvent -> rotation = rotationCheckBox.isSelected());
     CheckBox symmetryCheckBox = new CheckBox("Symmetry");
+    symmetryCheckBox.setSelected(symmetry);
     symmetryCheckBox.setOnAction(actionEvent -> symmetry = symmetryCheckBox.isSelected());
 
-    Slider avoidEmptyPatternSlider = new Slider(0, 0.99, 0);
+    Label avoidEmptyPatternLabel = new Label("Avoid Empty Pattern: " + avoidEmptyPattern);
+    Slider avoidEmptyPatternSlider = new Slider(0, 0.99, avoidEmptyPattern);
     avoidEmptyPatternSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
       this.avoidEmptyPattern = (double) newValue;
+      avoidEmptyPatternLabel.setText(String.format("Avoid Empty Pattern: %.2f", avoidEmptyPattern));
     });
 
     //Buttons
@@ -213,6 +217,7 @@ public class App extends Application {
         patternSizeTextField,
         rotationCheckBox,
         symmetryCheckBox,
+        avoidEmptyPatternLabel,
         avoidEmptyPatternSlider,
         generateButton,
         showPatternsButton,
@@ -235,9 +240,9 @@ public class App extends Application {
     subScene.setCamera(camera);
 
     parent.setRight(subScene);
-//    parent.paddingProperty().setValue(new Insets(10d, 10d, 10d));
+    parent.paddingProperty().setValue(new Insets(10d));
 
-    scene = new Scene(parent, WIDTH, HEIGHT, true, SceneAntialiasing.BALANCED);
+    scene = new Scene(parent, parent.getPrefWidth(), parent.getPrefHeight(), true, SceneAntialiasing.BALANCED);
 
     scene.setOnKeyPressed(keyEvent -> {
       System.out.println(keyEvent.getCode());
