@@ -92,7 +92,9 @@ public class SimpleModel3D {
     int propagationTries = 0;
     this.entropy = wave.stream().map(this::getEntropy).collect(Collectors.toList());
 
+    System.out.print("Attempt number: ");
     while (collapsedCells < outputSize.getX() * outputSize.getY() * outputSize.getZ() && tries < maximumTries) {
+
       //create backup if propagation fails
       List<List<Integer>> snapshot = new ArrayList<>();
       wave.forEach(cell -> snapshot.add(new ArrayList<>(cell)));
@@ -116,6 +118,7 @@ public class SimpleModel3D {
       if (!success) {
         if (propagationTries >= maxPropagationTries) {
           tries++;
+          System.out.print(tries + ",");
           borderCells = initializeWave();
           this.entropy = wave.stream().map(this::getEntropy).collect(Collectors.toList());
           collapsedCells = 0;
