@@ -18,12 +18,10 @@ public class SimpleModel3D {
   private boolean symmetry;
   private double avoidEmptyPattern;
   private int maximumTries = 5000;
-  private int maxPropagationTries = 10;
+  private int maxPropagationTries = 0;
 
   public List<Pattern3D> patterns;
   public List<HashMap<Vector3<Integer>, Integer>> patternsByPosition;
-  private HashMap<Integer, Integer> yRotatedPatterns; //Maps original pattern index -> rotated pattern index in patterns List
-  private int uniquePatternCount;
 
   public List<Double> patternFrequency;
   public HashMap<Integer, Neighbours> patternNeighbours;
@@ -89,12 +87,10 @@ public class SimpleModel3D {
   public int[][][] solve() {
     ArrayList<Integer> borderCells = initializeWave();
     baseEntropy = getEntropy(0);
-    int collapsedCells = 0;
+    int collapsedCells = (int) wave.stream().filter(l -> l.size() == 1).count();
     int tries = 0;
     int propagationTries = 0;
     this.entropy = wave.stream().map(this::getEntropy).collect(Collectors.toList());
-
-    borderCells.forEach(this::propagate);
 
     while (collapsedCells < outputSize.getX() * outputSize.getY() * outputSize.getZ() && tries < maximumTries) {
       //create backup if propagation fails
@@ -103,11 +99,16 @@ public class SimpleModel3D {
 
       //solve
       //collapse min entropy cell
-      int minEntropyIndex = getLowestEntropyCell();
-      wave.set(minEntropyIndex, Collections.singletonList(selectRandomPattern(minEntropyIndex)));
-      this.entropy.set(minEntropyIndex, getEntropy(minEntropyIndex));
-
-      boolean success = propagate(minEntropyIndex);
+      boolean success = false;
+      if(!borderCells.isEmpty()) {
+        success = propagate(borderCells);
+        borderCells.clear();
+      } else {
+        int minEntropyIndex = getLowestEntropyCell();
+        wave.set(minEntropyIndex, Collections.singletonList(selectRandomPattern(minEntropyIndex)));
+        this.entropy.set(minEntropyIndex, getEntropy(minEntropyIndex));
+        success = propagate(Collections.singletonList(minEntropyIndex));
+      }
 //            if (checkForErrors() > 0) {
 ////                //throw new RuntimeException("Error after prop");
 ////            }
@@ -115,7 +116,7 @@ public class SimpleModel3D {
       if (!success) {
         if (propagationTries >= maxPropagationTries) {
           tries++;
-          initializeWave();
+          borderCells = initializeWave();
           this.entropy = wave.stream().map(this::getEntropy).collect(Collectors.toList());
           collapsedCells = 0;
         } else {
@@ -144,10 +145,10 @@ public class SimpleModel3D {
     return array;
   }
 
-  private boolean propagate(int cellIndex) {
+  private boolean propagate(List<Integer> cellIndices) {
     Queue<Integer> cellsToPropagate = new LinkedList<>();
 
-    cellsToPropagate.add(cellIndex);
+    cellsToPropagate.addAll(cellIndices);
     while (!cellsToPropagate.isEmpty()) {
       int currentCell = cellsToPropagate.poll();
 
@@ -174,9 +175,7 @@ public class SimpleModel3D {
         }
         List<Integer> neighbourCell = getWaveAt(neighbourPosition.getX(), neighbourPosition.getY(), neighbourPosition.getZ());
 
-        if (neighbourCell.size() == 1 && neighbourCell.get(0) == -1) {
-          continue;
-        }
+        if(neighbourCell.size() == 1 && neighbourCell.get(0) == -1) continue;
 
         HashSet<Integer> possiblePatterns = new HashSet<>();
         List<Integer> currentPatterns = wave.get(currentCell);
@@ -204,19 +203,20 @@ public class SimpleModel3D {
   }
 
   private ArrayList<Integer> initializeWave() {
-    ArrayList<Integer> borderCells = new ArrayList<>();
+    ArrayList<Integer> floorCells = new ArrayList<>();
+    ArrayList<Integer> paddingCells = new ArrayList<>();
     wave = new ArrayList<>();
     for (int x = 0; x < outputSize.getX(); x++) {
       for (int y = 0; y < outputSize.getY(); y++) {
         for (int z = 0; z < outputSize.getZ(); z++) {
           wave.add(new ArrayList<>());
           List<Integer> waveCell = wave.get(wave.size() - 1);
-          if (y == 0 || y == outputSize.getY() - 1) {
+          if (y == outputSize.getY() - 1) {
             waveCell.add(-1);
-            borderCells.add(wave.size() - 1);
-          } else if (x == 0 || x == outputSize.getX() - 1 || z == 0 || z == outputSize.getZ() - 1) {
+            floorCells.add(wave.size() - 1);
+          } else if (x == 0 || x == outputSize.getX() - 1 || y == 0 || z == 0 || z == outputSize.getZ() - 1) {
             waveCell.add(0);
-            borderCells.add(wave.size() - 1);
+            paddingCells.add(wave.size() - 1);
           } else {
             for (int i = 0; i < patterns.size(); i++) {
               waveCell.add(i);
@@ -225,20 +225,23 @@ public class SimpleModel3D {
         }
       }
     }
-
-    return borderCells;
+    floorCells.addAll(paddingCells);
+    return floorCells;
   }
 
   private int[][][] generateOutput() {
     int sizeX = outputSize.getX() * patternSize;
-    int sizeY = outputSize.getY() * patternSize;
+    int sizeY = (outputSize.getY() - 1) * patternSize;
     int sizeZ = outputSize.getZ() * patternSize;
     int[][][] grid = new int[sizeZ][sizeY][sizeX];
     for (int z = 0; z < outputSize.getZ(); z++) {
-      for (int y = 0; y < outputSize.getY(); y++) {
+      for (int y = 0; y < outputSize.getY() - 1; y++) {
         for (int x = 0; x < outputSize.getX(); x++) {
           Integer patternIndex = getWaveAt(x, y, z).get(0);
           Pattern3D pattern = patternIndex >= 0 ? patterns.get(patternIndex) : new Pattern3D(this.patternSize);
+          if (y >= (outputSize.getY() - 1)) {
+            System.out.println(patternIndex);
+          }
           for (int px = 0; px < patternSize; px++) {
             for (int py = 0; py < patternSize; py++) {
               for (int pz = 0; pz < patternSize; pz++) {
@@ -345,7 +348,6 @@ public class SimpleModel3D {
         }
       }
     }
-    this.uniquePatternCount = this.patterns.size();
 
     //remove all the emplty patterns from padding
     var x = input.size().getX() / patternSize;
@@ -403,7 +405,7 @@ public class SimpleModel3D {
 
           if (currentRotation.containsKey(newPos)) {
             this.patternNeighbours.get(patternIndex).addNeighbour(dir, currentRotation.get(newPos));
-          } else {
+          } else if (dir == Direction3D.DOWN) {
             this.patternNeighbours.get(patternIndex).addNeighbour(dir, -1);
             this.patternNeighbours.get(-1).addNeighbour(Utils.opposite(dir), patternIndex);
           }
@@ -445,47 +447,4 @@ public class SimpleModel3D {
     }
     return cell.get(cell.size() - 1);
   }
-
-//    private int checkForErrors() {
-//        AtomicInteger errors = new AtomicInteger();
-//        for (int x = 0; x < outputSize.getX(); x++) {
-//            for (int y = 0; y < outputSize.getY(); y++) {
-//                for (int i = 0; i < 4; i++) {
-//                    Direction dir = Direction.values()[i];
-//                    Vector2i dirV = Utils.DIRECTIONS.get(i);
-//
-//                    HashSet<Integer> possiblePatternsTest = new HashSet<>();
-//                    List<Integer> current = getWaveAt(x, y, z);
-//                    for (Integer pattern : current) {
-//                        possiblePatternsTest.addAll(patternNeighbours[pattern].neighbours.get(dir));
-//                    }
-//
-//                    final int currentIndex = x + y * outputSize.getX();
-//
-//                    int xn = x + dirV.x;
-//                    int yn = y + dirV.y;
-//
-//                    if (xn < 0 || xn >= outputSize.getX() || yn < 0 || yn >= outputSize.getY()) continue;
-//
-//                    List<Integer> neighbour = getWaveAt(xn, yn);
-//
-//                    neighbour.forEach(p -> {
-//                        for (Integer pattern : current) {
-//                            if (!possiblePatternsTest.contains(p)) {
-////                                System.out.println("direction: " + dir + " pattern: ");
-////                                System.out.println(patterns.get(pattern));
-////                                System.out.println("with pattern: ");
-////                                System.out.println(patterns.get(p));
-//                                System.out.println("pattern " + p + " in cell " + (xn + yn * outputSize.getX()) + " cant be " + dir + " of cell " + currentIndex);
-//                                errors.getAndIncrement();
-//                            }
-//                        }
-//                    });
-//                }
-//            }
-//        }
-//        if (errors.get() > 0) System.out.println("neighbour constraints not satisfied: " + errors + " errors.");
-//        return errors.get();
-//    }
-
 }

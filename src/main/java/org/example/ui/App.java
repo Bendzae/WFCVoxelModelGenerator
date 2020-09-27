@@ -404,16 +404,23 @@ public class App extends Application {
     int sizeY = voxelModel[0].length;
     int sizeZ = voxelModel.length;
     for (int x = 0; x < sizeX; x++) {
-      for (int y = 0; y < sizeY; y++) {
+      for (int y = 0; y < sizeY + 1; y++) {
         for (int z = 0; z < sizeZ; z++) {
-          int colorIndex = voxelModel[z][y][x];
-          if (colorIndex > 0) {
+          int colorIndex = -1;
+          if (y == sizeY) {
+            colorIndex = 99;
+          } else {
+            colorIndex = voxelModel[z][y][x];
+          }
+          if (colorIndex >= 0) {
             Box box = new Box(BOX_SIZE, BOX_SIZE, BOX_SIZE);
             box.translateXProperty().setValue(BOX_SIZE * (x + offset.getX() - (sizeX / 2)));
             box.translateYProperty().setValue(BOX_SIZE * (y + offset.getY() - (sizeY / 2)));
             box.translateZProperty().setValue(BOX_SIZE * (z + offset.getZ() - (sizeZ / 2)));
             final PhongMaterial phongMaterial = new PhongMaterial();
-            phongMaterial.setDiffuseColor(ColorUtils.hexToColor(this.palette[colorIndex]));
+
+            Color color = colorIndex == 99 ? new Color(0, 0, 0, 0.1) : ColorUtils.hexToColor(this.palette[colorIndex]);
+            phongMaterial.setDiffuseColor(color);
             box.setMaterial(phongMaterial);
             result.add(box);
           }
