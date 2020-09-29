@@ -237,6 +237,7 @@ public class App extends Application {
     camera.translateYProperty().setValue(-h1 / 2);
     camera.translateZProperty().setValue(w1);
     subScene.setFill(Color.BLACK.brighter().brighter());
+//    subScene.setFill(Color.WHITE);
     subScene.setCamera(camera);
 
     parent.setRight(subScene);
@@ -334,7 +335,8 @@ public class App extends Application {
     simpleModel3D.patternsByPosition.get(0).forEach((pos, i) -> boxes.getChildren()
         .addAll(createBoxesFromVoxelArray(
             simpleModel3D.patterns.get(i).getRawArray(),
-            new Vector3<>((pos.getX() * 2) * patternSize, (pos.getY() * 2) * patternSize, (pos.getZ() * 2) * patternSize)
+            new Vector3<>((pos.getX() * 2) * patternSize, (pos.getY() * 2) * patternSize, (pos.getZ() * 2) * patternSize),
+            false
             )
         ));
   }
@@ -395,19 +397,22 @@ public class App extends Application {
   }
 
   private List<Box> createBoxesFromVoxelArray(int[][][] voxelModel) {
-    return createBoxesFromVoxelArray(voxelModel, new Vector3<Integer>(0, 0, 0));
+    return createBoxesFromVoxelArray(voxelModel, new Vector3<Integer>(0, 0, 0), true);
   }
 
-  private List<Box> createBoxesFromVoxelArray(int[][][] voxelModel, Vector3<Integer> offset) {
+  private List<Box> createBoxesFromVoxelArray(int[][][] voxelModel, Vector3<Integer> offset, boolean floor) {
     List<Box> result = new ArrayList<>();
     int sizeX = voxelModel[0][0].length;
     int sizeY = voxelModel[0].length;
     int sizeZ = voxelModel.length;
+
+    if(floor) sizeY += 1;
+
     for (int x = 0; x < sizeX; x++) {
-      for (int y = 0; y < sizeY + 1; y++) {
+      for (int y = 0; y < sizeY; y++) {
         for (int z = 0; z < sizeZ; z++) {
           int colorIndex = -1;
-          if (y == sizeY) {
+          if (floor && y == sizeY - 1) {
             colorIndex = 99;
           } else {
             colorIndex = voxelModel[z][y][x];
