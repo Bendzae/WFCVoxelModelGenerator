@@ -206,7 +206,7 @@ public class OverlappingModelTest {
     @Test
     public void indexToPos() {
         int outSize = 3;
-        SimpleModel3D simpleModel3D = new SimpleModel3D(new int[2][2][2], 2, new Vector3<Integer>(outSize, outSize, outSize), false, false, 0);
+        SimpleModel3D simpleModel3D = new SimpleModel3D(new int[2][2][2], 2, new Vector3<Integer>(outSize, outSize, outSize), false, false, 0,0);
 
         for (int i = 0; i < outSize * outSize * outSize; i++) {
             Vector3<Integer> p = simpleModel3D.getPosFromCellIndex(i);

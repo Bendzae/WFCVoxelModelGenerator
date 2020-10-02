@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import javafx.application.Application;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleLongProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -82,6 +83,8 @@ public class App extends Application {
   private int patternSize = 2;
   private Vector3<Integer> inputSize = new Vector3<>(6, 6, 6);
   private Vector3<Integer> outputSize = new Vector3<>(15, 8, 15);
+  private SimpleLongProperty rngSeed = new SimpleLongProperty((long) (Math.random() * 10000));
+  private boolean useSeed = false;
 
   int[][][] inputArray;
   private SmartGroup boxes;
@@ -197,6 +200,24 @@ public class App extends Application {
       avoidEmptyPatternLabel.setText(String.format("Avoid Empty Pattern: %.2f", avoidEmptyPattern));
     });
 
+    Label seedLabel = new Label("Current seed: " + rngSeed.get());
+    TextField seedTextField = new TextField();
+    seedTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+      if (!newValue.isEmpty()) {
+        long longValue = Long.parseLong(newValue);
+        this.rngSeed.set(longValue);
+      }
+    });
+
+    rngSeed.addListener((observable, oldValue, newValue) -> {
+      seedLabel.setText("Current seed: " + newValue.toString());
+      seedTextField.setText(newValue.toString());
+    });
+
+    CheckBox seedCheckBox = new CheckBox("Use Seed");
+    seedCheckBox.setSelected(this.useSeed);
+    seedCheckBox.setOnAction(actionEvent -> this.useSeed = seedCheckBox.isSelected());
+
     //Buttons
     Button generateButton = new Button("Generate");
     generateButton.setOnAction(actionEvent -> generate());
@@ -219,6 +240,9 @@ public class App extends Application {
         symmetryCheckBox,
         avoidEmptyPatternLabel,
         avoidEmptyPatternSlider,
+        seedLabel,
+        seedTextField,
+        seedCheckBox,
         generateButton,
         showPatternsButton,
         clearInputButton,
@@ -268,7 +292,18 @@ public class App extends Application {
     applicationState = ApplicationState.VIEW;
     boxes.getChildren().clear();
 
-    SimpleModel3D simpleModel3D = new SimpleModel3D(inputArray, patternSize, outputSize, rotation, symmetry, avoidEmptyPattern);
+    if (!this.useSeed) {
+      this.rngSeed.set((long) (Math.random() * 10000));
+    }
+    SimpleModel3D simpleModel3D = new SimpleModel3D(
+        inputArray,
+        patternSize,
+        outputSize,
+        rotation,
+        symmetry,
+        avoidEmptyPattern,
+        this.rngSeed.get()
+    );
     int[][][] solution = simpleModel3D.solve();
     if (solution != null) {
       boxes.getChildren().addAll(createBoxesFromVoxelArray(solution));
@@ -330,7 +365,15 @@ public class App extends Application {
   private void showPatterns() {
     applicationState = ApplicationState.VIEW;
     boxes.getChildren().clear();
-    SimpleModel3D simpleModel3D = new SimpleModel3D(inputArray, patternSize, outputSize, rotation, symmetry, avoidEmptyPattern);
+    SimpleModel3D simpleModel3D = new SimpleModel3D(
+        inputArray,
+        patternSize,
+        outputSize,
+        rotation,
+        symmetry,
+        avoidEmptyPattern,
+        rngSeed.get()
+    );
 
     simpleModel3D.patternsByPosition.get(0).forEach((pos, i) -> boxes.getChildren()
         .addAll(createBoxesFromVoxelArray(
@@ -406,7 +449,9 @@ public class App extends Application {
     int sizeY = voxelModel[0].length;
     int sizeZ = voxelModel.length;
 
-    if(floor) sizeY += 1;
+    if (floor) {
+      sizeY += 1;
+    }
 
     for (int x = 0; x < sizeX; x++) {
       for (int y = 0; y < sizeY; y++) {

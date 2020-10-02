@@ -7,11 +7,13 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Random;
 import java.util.stream.Collectors;
 import org.example.voxparser.Vector3;
 
 public class SimpleModel3D {
 
+  private Random rng;
   private Grid3D input;
   private int patternSize;
   private boolean rotation;
@@ -38,7 +40,8 @@ public class SimpleModel3D {
       Vector3<Integer> outputSize,
       boolean rotation,
       boolean symmetry,
-      double avoidEmptyPattern
+      double avoidEmptyPattern,
+      long rngSeed
   ) {
     boolean inputPadding = true;
     if (inputPadding) {
@@ -53,6 +56,7 @@ public class SimpleModel3D {
 //        int calculatedOutputSize = outputSize.x / (patternSize - 1);
 //        this.outputSize = new Vector2i(calculatedOutputSize, calculatedOutputSize);
     this.outputSize = new Vector3<>(outputSize.getX() + 2, outputSize.getY() + 2, outputSize.getZ() + 2);
+    this.rng = new Random(rngSeed);
 
     //TODO Remove later
 //        if (this.input.size().getX() % patternSize != 0
@@ -280,7 +284,7 @@ public class SimpleModel3D {
         .map(index -> patternFrequency.get(index))
         .reduce(0d, (sum, weight) -> sum + (weight * log2(weight)), Double::sum);
 
-    return log2(sumOfWeights) - (logSumOfWeights / sumOfWeights) + (2e-10 * Math.random());
+    return log2(sumOfWeights) - (logSumOfWeights / sumOfWeights) + (2e-10 * rng.nextDouble());
   }
 
   private double log2(double value) {
@@ -439,7 +443,7 @@ public class SimpleModel3D {
     List<Double> frequencies = cell.stream().map(pattern -> patternFrequency.get(pattern)).collect(Collectors.toList());
     double total = frequencies.stream().reduce(0d, Double::sum);
 
-    double rand = Math.random() * total;
+    double rand = rng.nextDouble() * total;
     double acc = 0;
     for (int i = 0; i < cell.size() - 1; i++) {
       int pattern = cell.get(i);
