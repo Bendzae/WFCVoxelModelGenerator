@@ -46,6 +46,8 @@ import org.example.voxparser.Vector3;
 import org.example.voxparser.VoxFile;
 import org.example.voxparser.VoxModel;
 import org.example.voxparser.VoxReader;
+import org.example.voxparser.VoxSerializer;
+import org.example.voxparser.Voxel;
 import org.example.wfc.Direction3D;
 import org.example.wfc.Pattern3D;
 import org.example.wfc.SimpleModel3D;
@@ -307,6 +309,24 @@ public class App extends Application {
     int[][][] solution = simpleModel3D.solve();
     if (solution != null) {
       boxes.getChildren().addAll(createBoxesFromVoxelArray(solution));
+
+      List<Voxel> voxels = new ArrayList<>();
+      int sizeX = solution[0][0].length;
+      int sizeY = solution[0].length;
+      int sizeZ = solution.length;
+      for (int x = 0; x < sizeX; x++) {
+        for (int y = 0; y < sizeY; y++) {
+          for (int z = 0; z < sizeZ; z++) {
+            int colorIndex = solution[z][y][x];
+            if (colorIndex >= 0) {
+              voxels.add(new Voxel(new Vector3<Byte>((byte) x, (byte) y, (byte) z), (byte) colorIndex));
+            }
+          }
+        }
+      }
+      VoxModel voxModel = new VoxModel(new Vector3<>(sizeX, sizeY, sizeZ), voxels.toArray(Voxel[]::new));
+      VoxSerializer voxSerializer = new VoxSerializer();
+      voxSerializer.writeToVox(voxModel, "out.vox");
     }
   }
 
