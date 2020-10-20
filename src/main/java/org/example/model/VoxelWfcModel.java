@@ -1,4 +1,4 @@
-package org.example.wfc;
+package org.example.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,13 +11,12 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import org.example.voxparser.Vector3;
 
-public class SimpleModel3D {
+public class VoxelWfcModel {
 
   private Random rng;
   private Grid3D input;
   private int patternSize;
   private boolean rotation;
-  private boolean symmetry;
   private double avoidEmptyPattern;
   private int maximumTries = 5000;
   private int maxPropagationTries = 0;
@@ -34,12 +33,11 @@ public class SimpleModel3D {
 
   private Double baseEntropy;
 
-  public SimpleModel3D(
+  public VoxelWfcModel(
       int[][][] input,
       int patternSize,
       Vector3<Integer> outputSize,
       boolean rotation,
-      boolean symmetry,
       double avoidEmptyPattern,
       long rngSeed
   ) {
@@ -51,29 +49,20 @@ public class SimpleModel3D {
     }
     this.patternSize = patternSize;
     this.rotation = rotation;
-    this.symmetry = symmetry;
     this.avoidEmptyPattern = avoidEmptyPattern;
 //        int calculatedOutputSize = outputSize.x / (patternSize - 1);
 //        this.outputSize = new Vector2i(calculatedOutputSize, calculatedOutputSize);
     this.outputSize = new Vector3<>(outputSize.getX() + 2, outputSize.getY() + 2, outputSize.getZ() + 2);
     this.rng = new Random(rngSeed);
 
-    //TODO Remove later
-//        if (this.input.size().getX() % patternSize != 0
-//                || this.input.size().getY() % patternSize != 0
-//                || this.input.size().getZ() % patternSize != 0) {
-//            throw new RuntimeException("input size should be divisible by pattern size (for now)");
-//        }
-
     System.out.println("Input size: " + this.input.size());
     findPatterns();
     findNeighbours();
   }
 
-  public SimpleModel3D(List<Tile3D> tiles, int patternSize, Vector3<Integer> outputSize, boolean rotation, boolean symmetry) {
+  public VoxelWfcModel(List<Tile3D> tiles, int patternSize, Vector3<Integer> outputSize, boolean rotation) {
     this.patternSize = patternSize;
     this.rotation = rotation;
-    this.symmetry = symmetry;
     this.outputSize = outputSize;
 
     this.patterns = tiles.stream().map(tile -> new Pattern3D(tile.getTileSize(), tile.getVoxels()))

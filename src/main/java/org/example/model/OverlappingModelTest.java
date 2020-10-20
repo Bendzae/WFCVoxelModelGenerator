@@ -1,17 +1,17 @@
-package org.example.wfc;
+package org.example.model;
 
 
-import org.example.voxparser.Vector3;
-import org.joml.Vector2i;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Stream;
-
-import static org.junit.Assert.*;
+import org.example.voxparser.Vector3;
+import org.joml.Vector2i;
+import org.junit.Before;
+import org.junit.Test;
 
 public class OverlappingModelTest {
     private int[][] input = new int[][]{
@@ -206,11 +206,18 @@ public class OverlappingModelTest {
     @Test
     public void indexToPos() {
         int outSize = 3;
-        SimpleModel3D simpleModel3D = new SimpleModel3D(new int[2][2][2], 2, new Vector3<Integer>(outSize, outSize, outSize), false, false, 0,0);
+        VoxelWfcModel voxelWfcModel = new VoxelWfcModel(
+            new int[2][2][2],
+            2,
+            new Vector3<Integer>(outSize, outSize, outSize),
+            false,
+            0,
+            0
+        );
 
         for (int i = 0; i < outSize * outSize * outSize; i++) {
-            Vector3<Integer> p = simpleModel3D.getPosFromCellIndex(i);
-            int cellIndexFromPos = simpleModel3D.getCellIndexFromPos(p.getX(), p.getY(), p.getZ());
+            Vector3<Integer> p = voxelWfcModel.getPosFromCellIndex(i);
+            int cellIndexFromPos = voxelWfcModel.getCellIndexFromPos(p.getX(), p.getY(), p.getZ());
             assertEquals(cellIndexFromPos, i);
         }
     }

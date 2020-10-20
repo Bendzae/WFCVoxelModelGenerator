@@ -1,9 +1,8 @@
-package org.example.wfc;
-
-import org.joml.Vector2i;
+package org.example.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.joml.Vector2i;
 
 public class Grid {
     private int[][] grid;

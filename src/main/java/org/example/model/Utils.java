@@ -1,9 +1,8 @@
-package org.example.wfc;
-
-import org.example.voxparser.Vector3;
-import org.joml.Vector2i;
+package org.example.model;
 
 import java.util.List;
+import org.example.voxparser.Vector3;
+import org.joml.Vector2i;
 
 public class Utils {
 

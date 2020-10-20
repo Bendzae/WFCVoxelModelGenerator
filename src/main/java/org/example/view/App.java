@@ -1,4 +1,4 @@
-package org.example.ui;
+package org.example.view;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -42,16 +42,16 @@ import javafx.scene.shape.Box;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Transform;
 import javafx.stage.Stage;
+import org.example.model.Direction3D;
+import org.example.model.Pattern3D;
+import org.example.model.Tile3D;
+import org.example.model.VoxelWfcModel;
 import org.example.voxparser.Vector3;
 import org.example.voxparser.VoxFile;
 import org.example.voxparser.VoxModel;
 import org.example.voxparser.VoxReader;
 import org.example.voxparser.VoxSerializer;
 import org.example.voxparser.Voxel;
-import org.example.wfc.Direction3D;
-import org.example.wfc.Pattern3D;
-import org.example.wfc.SimpleModel3D;
-import org.example.wfc.Tile3D;
 
 /**
  * JavaFX App
@@ -80,7 +80,6 @@ public class App extends Application {
 
   //WFC Parameters
   private boolean rotation = true;
-  private boolean symmetry = false;
   private double avoidEmptyPattern = 0;
   private int patternSize = 2;
   private Vector3<Integer> inputSize = new Vector3<>(6, 6, 6);
@@ -191,9 +190,6 @@ public class App extends Application {
     CheckBox rotationCheckBox = new CheckBox("Rotation");
     rotationCheckBox.setSelected(rotation);
     rotationCheckBox.setOnAction(actionEvent -> rotation = rotationCheckBox.isSelected());
-    CheckBox symmetryCheckBox = new CheckBox("Symmetry");
-    symmetryCheckBox.setSelected(symmetry);
-    symmetryCheckBox.setOnAction(actionEvent -> symmetry = symmetryCheckBox.isSelected());
 
     Label avoidEmptyPatternLabel = new Label("Avoid Empty Pattern: " + avoidEmptyPattern);
     Slider avoidEmptyPatternSlider = new Slider(0, 0.99, avoidEmptyPattern);
@@ -239,7 +235,6 @@ public class App extends Application {
         patternSizeLabel,
         patternSizeTextField,
         rotationCheckBox,
-        symmetryCheckBox,
         avoidEmptyPatternLabel,
         avoidEmptyPatternSlider,
         seedLabel,
@@ -297,16 +292,15 @@ public class App extends Application {
     if (!this.useSeed) {
       this.rngSeed.set((long) (Math.random() * 10000));
     }
-    SimpleModel3D simpleModel3D = new SimpleModel3D(
+    VoxelWfcModel voxelWfcModel = new VoxelWfcModel(
         inputArray,
         patternSize,
         outputSize,
         rotation,
-        symmetry,
         avoidEmptyPattern,
         this.rngSeed.get()
     );
-    int[][][] solution = simpleModel3D.solve();
+    int[][][] solution = voxelWfcModel.solve();
     if (solution != null) {
       boxes.getChildren().addAll(createBoxesFromVoxelArray(solution));
 
@@ -375,8 +369,8 @@ public class App extends Application {
     applicationState = ApplicationState.VIEW;
     boxes.getChildren().clear();
 
-    SimpleModel3D simpleModel3D = new SimpleModel3D(tiles, patternSize, outputSize, rotation, symmetry);
-    int[][][] solution = simpleModel3D.solve();
+    VoxelWfcModel voxelWfcModel = new VoxelWfcModel(tiles, patternSize, outputSize, rotation);
+    int[][][] solution = voxelWfcModel.solve();
     if (solution != null) {
       boxes.getChildren().addAll(createBoxesFromVoxelArray(solution));
     }
@@ -385,19 +379,18 @@ public class App extends Application {
   private void showPatterns() {
     applicationState = ApplicationState.VIEW;
     boxes.getChildren().clear();
-    SimpleModel3D simpleModel3D = new SimpleModel3D(
+    VoxelWfcModel voxelWfcModel = new VoxelWfcModel(
         inputArray,
         patternSize,
         outputSize,
         rotation,
-        symmetry,
         avoidEmptyPattern,
         rngSeed.get()
     );
 
-    simpleModel3D.patternsByPosition.get(0).forEach((pos, i) -> boxes.getChildren()
+    voxelWfcModel.patternsByPosition.get(0).forEach((pos, i) -> boxes.getChildren()
         .addAll(createBoxesFromVoxelArray(
-            simpleModel3D.patterns.get(i).getRawArray(),
+            voxelWfcModel.patterns.get(i).getRawArray(),
             new Vector3<>((pos.getX() * 2) * patternSize, (pos.getY() * 2) * patternSize, (pos.getZ() * 2) * patternSize),
             false
             )

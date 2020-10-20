@@ -1,4 +1,4 @@
-package org.example.ui;
+package org.example.view;
 
 import javafx.scene.paint.Color;
 

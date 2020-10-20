@@ -1,9 +1,6 @@
-package org.example.wfc;
+package org.example.model;
 
 import org.example.voxparser.Vector3;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class Grid3D {
 

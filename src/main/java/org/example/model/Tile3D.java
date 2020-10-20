@@ -1,4 +1,4 @@
-package org.example.wfc;
+package org.example.model;
 
 
 public class Tile3D {
