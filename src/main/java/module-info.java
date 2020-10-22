@@ -1,7 +1,6 @@
 module org.example {
   requires javafx.controls;
   requires javafx.fxml;
-  requires junit;
   requires org.joml;
   requires com.google.gson;
 

@@ -58,6 +58,7 @@ public class App extends Application {
   private static final int WIDTH = 1400;
   private static final int HEIGHT = 800;
   private static final int BOX_SIZE = 5;
+  private static String INPUT_MODELS_PATH = "src/main/resources/inputmodels";
 
   private static Scene scene;
   private VoxelModelViewer voxelModelViewer;
@@ -200,7 +201,7 @@ public class App extends Application {
 
       if (file != null) {
         //import
-        Path targetDir = Paths.get("inputmodels");
+        Path targetDir = Paths.get(INPUT_MODELS_PATH);
         try {
           Path localPath = Files.copy(file.toPath(), targetDir.resolve(file.getName()), StandardCopyOption.REPLACE_EXISTING);
           modelComboBox.getItems().add(localPath.toString());
@@ -215,7 +216,7 @@ public class App extends Application {
     Label modelLabel = new Label("Input Model:");
     //Model Loader
     List<String> modelFiles = new ArrayList<>();
-    try (Stream<Path> walk = Files.walk(Paths.get("inputmodels"))) {
+    try (Stream<Path> walk = Files.walk(Paths.get(INPUT_MODELS_PATH))) {
 
       modelFiles = walk.map(Path::toString)
           .filter(file -> file.endsWith(".vox"))
