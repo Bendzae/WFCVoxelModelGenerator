@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Random;
 import java.util.stream.Collectors;
-import org.example.interfaces.IVoxelAlgortithm;
+import org.example.shared.IVoxelAlgortithm;
 import org.example.voxparser.Vector3;
 
 public class VoxelWfcModel implements IVoxelAlgortithm {
@@ -60,23 +60,6 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
     findPatterns();
     findNeighbours();
   }
-
-  public VoxelWfcModel(List<Tile3D> tiles, int patternSize, Vector3<Integer> outputSize, boolean rotation) {
-    this.patternSize = patternSize;
-    this.rotation = rotation;
-    this.outputSize = outputSize;
-
-    this.patterns = tiles.stream().map(tile -> new Pattern3D(tile.getTileSize(), tile.getVoxels()))
-        .collect(Collectors.toList());
-    this.patternFrequency = tiles.stream().map(tile -> (double) tile.getFrequency()).collect(Collectors.toList());
-    normalizePatternFrequency(tiles.size());
-    this.patternNeighbours = new HashMap<>();
-    for (int i = 0; i < tiles.size(); i++) {
-      this.patternNeighbours.put(i, tiles.get(i).getNeighbours());
-    }
-  }
-
-  ;
 
   public int[][][] solve() {
     ArrayList<Integer> borderCells = initializeWave();

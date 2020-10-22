@@ -32,7 +32,11 @@ public class VoxSerializer {
 
   }
 
-  public void writeToVox(VoxModel model, int[] palette, String filename) {
+  public void writeToVox(VoxModel model, int[] palette, File file) {
+
+    if (!file.getAbsolutePath().endsWith(".vox")) {
+      file = new File(file.getAbsolutePath() + ".vox");
+    }
 
     int size_content_length = 3 * 4; // X,Y,Z * 4byte int
     int xyzi_content_length = model.getVoxels().length * 4 + 4; //4byte int N, N*4bye for voxels
@@ -40,7 +44,6 @@ public class VoxSerializer {
     int chunk_data_length = 3 * 4; // id + content size + children size
     int numberOfChunks = 3;
 
-    File file = new File(filename);
     try (FileOutputStream fos = new FileOutputStream(file)) {
       //Write magic bytes "VOX "
       fos.write(VOX);

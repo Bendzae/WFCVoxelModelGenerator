@@ -1,0 +1,8 @@
+{
+  "patternSize": 3,
+  "outputSizeX": 5,
+  "outputSizeY": 15,
+  "outputSizeZ": 5,
+  "rotation": true,
+  "avoidEmptyPattern": 0.9703960396039604
+}

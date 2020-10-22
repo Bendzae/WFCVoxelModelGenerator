@@ -3,6 +3,7 @@ module org.example {
   requires javafx.fxml;
   requires junit;
   requires org.joml;
+  requires com.google.gson;
 
   opens org.example to javafx.fxml;
   exports org.example.view;
