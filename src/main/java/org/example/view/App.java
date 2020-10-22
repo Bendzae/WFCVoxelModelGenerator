@@ -151,11 +151,11 @@ public class App extends Application {
     voxelModelViewer.showPatterns(voxelWfcModel, patternSize.get());
   }
 
-  private void loadVoxModel(String filepath) {
-    if (filepath == null) {
+  private void loadVoxModel(String filename) {
+    if (filename == null) {
       return;
     }
-
+    String filepath = INPUT_MODELS_PATH + "/" + filename;
     File paramsFile = new File(filepath.replace(".vox", "_params.json"));
 
     if (paramsFile.isFile()) {
@@ -203,9 +203,9 @@ public class App extends Application {
         //import
         Path targetDir = Paths.get(INPUT_MODELS_PATH);
         try {
-          Path localPath = Files.copy(file.toPath(), targetDir.resolve(file.getName()), StandardCopyOption.REPLACE_EXISTING);
-          modelComboBox.getItems().add(localPath.toString());
-          modelComboBox.getSelectionModel().select(localPath.toString());
+          Files.copy(file.toPath(), targetDir.resolve(file.getName()), StandardCopyOption.REPLACE_EXISTING);
+          modelComboBox.getItems().add(file.getName());
+          modelComboBox.getSelectionModel().select(file.getName());
         } catch (IOException e) {
           e.printStackTrace();
         }
@@ -218,15 +218,19 @@ public class App extends Application {
     List<String> modelFiles = new ArrayList<>();
     try (Stream<Path> walk = Files.walk(Paths.get(INPUT_MODELS_PATH))) {
 
-      modelFiles = walk.map(Path::toString)
+      modelFiles = walk.map(Path::getFileName)
+          .map(Path::toString)
           .filter(file -> file.endsWith(".vox"))
           .collect(Collectors.toList());
     } catch (IOException e) {
       e.printStackTrace();
     }
+    System.out.println(modelFiles);
     this.modelComboBox = new ComboBox<>(FXCollections.observableArrayList(modelFiles));
     modelComboBox.getSelectionModel().selectFirst();
-    modelComboBox.setOnAction(actionEvent -> loadVoxModel(modelComboBox.getValue()));
+    modelComboBox.setOnAction(actionEvent -> {
+      loadVoxModel(modelComboBox.getValue());
+    });
     parent.getChildren().addAll(modelLabel, modelComboBox, importButton);
   }
 
@@ -416,7 +420,7 @@ public class App extends Application {
         .setPrettyPrinting()
         .create();
     try {
-      String currentInputFile = modelComboBox.getValue();
+      String currentInputFile = INPUT_MODELS_PATH + "/" + modelComboBox.getValue();
       String json = gson.toJson(voxelWFCParameters);
       BufferedWriter writer = new BufferedWriter(new FileWriter(currentInputFile.replace(".vox", "_params.json")));
       writer.write(json);
