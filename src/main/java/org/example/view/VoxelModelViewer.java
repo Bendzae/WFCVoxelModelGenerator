@@ -100,6 +100,7 @@ public class VoxelModelViewer {
   }
 
   public void showPatterns(VoxelWfcModel voxelWfcModel, int patternSize) {
+    boxes.getChildren().clear();
     voxelWfcModel.patternsByPosition.get(0).forEach((pos, i) -> boxes.getChildren()
         .addAll(createBoxesFromVoxelArray(
             voxelWfcModel.patterns.get(i).getRawArray(),
