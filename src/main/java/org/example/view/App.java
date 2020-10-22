@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -84,7 +85,7 @@ public class App extends Application {
     menu.setPadding(new Insets(10));
 
     //Menu Elements
-    initModelLoader(menu);
+    initModelLoader(menu, stage);
     initParameters(menu);
     initButtons(menu);
     initExportButton(menu, stage);
@@ -182,7 +183,32 @@ public class App extends Application {
     this.voxelModelViewer.clear();
   }
 
-  private void initModelLoader(VBox parent) {
+  private void initModelLoader(VBox parent, Stage stage) {
+    Button importButton = new Button("Import Model");
+
+    importButton.setOnAction(event -> {
+      FileChooser fileChooser = new FileChooser();
+
+      //Set extension filter for files
+      FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("VOX files (*.vox)", "*.vox");
+      fileChooser.getExtensionFilters().add(extFilter);
+
+      //Show open file dialog
+      File file = fileChooser.showOpenDialog(stage);
+
+      if (file != null) {
+        //import
+        Path targetDir = Paths.get("inputmodels");
+        try {
+          Path localPath = Files.copy(file.toPath(), targetDir.resolve(file.getName()), StandardCopyOption.REPLACE_EXISTING);
+          modelComboBox.getItems().add(localPath.toString());
+          modelComboBox.getSelectionModel().select(localPath.toString());
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+    });
+
     //Model Loader Label
     Label modelLabel = new Label("Input Model:");
     //Model Loader
@@ -198,7 +224,7 @@ public class App extends Application {
     this.modelComboBox = new ComboBox<>(FXCollections.observableArrayList(modelFiles));
     modelComboBox.getSelectionModel().selectFirst();
     modelComboBox.setOnAction(actionEvent -> loadVoxModel(modelComboBox.getValue()));
-    parent.getChildren().addAll(modelLabel, modelComboBox);
+    parent.getChildren().addAll(modelLabel, modelComboBox, importButton);
   }
 
   private void initParameters(VBox parent) {
