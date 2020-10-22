@@ -9,9 +9,10 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Random;
 import java.util.stream.Collectors;
+import org.example.interfaces.IVoxelAlgortithm;
 import org.example.voxparser.Vector3;
 
-public class VoxelWfcModel {
+public class VoxelWfcModel implements IVoxelAlgortithm {
 
   private Random rng;
   private Grid3D input;
