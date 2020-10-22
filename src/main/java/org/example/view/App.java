@@ -303,9 +303,8 @@ public class App extends Application {
     if (solution != null) {
       boxes.getChildren().addAll(createBoxesFromVoxelArray(solution));
 
-
       VoxSerializer voxSerializer = new VoxSerializer();
-      voxSerializer.writeToVox(new VoxModel(solution), palette, "out.vox");
+      voxSerializer.writeToVox(ModelConverter.arrayToVoxModel(solution), palette, "out.vox");
     }
   }
 
@@ -403,7 +402,7 @@ public class App extends Application {
     VoxModel[] models = voxFile.getModels();
     VoxModel model = models[0];
 
-    return model.to3DArray();
+    return ModelConverter.VoxModeltoArray(model);
   }
 
   private void loadVoxModel(String filepath) {
