@@ -1,10 +1,16 @@
 package org.example.view;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.example.voxparser.Vector3;
+import org.example.voxparser.VoxFile;
 import org.example.voxparser.VoxModel;
+import org.example.voxparser.VoxReader;
 import org.example.voxparser.Voxel;
 
 public class ModelConverter {
@@ -47,5 +53,27 @@ public class ModelConverter {
           .getColourIndex(); //Accounting for different coordinate systems
     });
     return out;
+  }
+
+  public static VoxelViewModel loadVoxelModelFromFile(String filepath) {
+    InputStream stream = null;
+    try {
+      stream = new FileInputStream(filepath);
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    }
+    VoxFile voxFile;
+    voxFile = null;
+
+    try (VoxReader reader = new VoxReader(stream)) {
+      voxFile = reader.read();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    VoxModel[] models = voxFile.getModels();
+    VoxModel model = models[0];
+
+    return new VoxelViewModel(VoxModeltoArray(model), voxFile.getPalette(), model.getSize());
   }
 }
