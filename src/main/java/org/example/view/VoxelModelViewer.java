@@ -35,7 +35,7 @@ public class VoxelModelViewer {
   private final DoubleProperty angleX = new SimpleDoubleProperty(0);
   private final DoubleProperty angleY = new SimpleDoubleProperty(0);
 
-  public VoxelModelViewer(int width, int height, int boxSize) {
+  public VoxelModelViewer(int width, int height, int boxSize, Color bgColor) {
     this.width = width;
     this.height = height;
     this.boxSize = boxSize;
@@ -48,8 +48,7 @@ public class VoxelModelViewer {
     camera.translateXProperty().setValue(-w1 / 2);
     camera.translateYProperty().setValue(-h1 / 2);
     camera.translateZProperty().setValue(w1);
-    subScene.setFill(Color.BLACK.brighter().brighter());
-//    subScene.setFill(Color.WHITE);
+    subScene.setFill(bgColor);
     subScene.setCamera(camera);
   }
 
