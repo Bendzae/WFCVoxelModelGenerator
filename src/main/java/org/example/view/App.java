@@ -72,8 +72,10 @@ public class App extends Application {
   private LongProperty rngSeed = new SimpleLongProperty((long) (Math.random() * 10000));
   private BooleanProperty useSeed = new SimpleBooleanProperty(false);
 
+  //Current generated Model
   int[][][] currentSolution = null;
 
+  //Entry Point of Application
   @Override
   public void start(Stage stage) throws IOException {
     //Root Element
