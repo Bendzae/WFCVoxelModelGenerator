@@ -37,6 +37,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -88,6 +89,7 @@ public class App extends Application {
   //Entry Point of Application
   @Override
   public void start(Stage stage) throws IOException {
+    stage.setTitle("Voxel Model Generator");
     //Root Element
     BorderPane parent = new BorderPane();
     parent.backgroundProperty().setValue(
@@ -103,7 +105,7 @@ public class App extends Application {
             new BackgroundFill(UI_BG_COLOR_PRIMARY, CornerRadii.EMPTY, Insets.EMPTY)
         )
     );
-    menu.setSpacing(10);
+    menu.setSpacing(15);
     menu.setPadding(new Insets(10));
 
     //Menu Elements
@@ -139,6 +141,7 @@ public class App extends Application {
     stage.setScene(scene);
     JMetro jMetro = new JMetro(Style.DARK);
     jMetro.setScene(scene);
+    scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
     stage.show();
   }
 
@@ -253,13 +256,13 @@ public class App extends Application {
     modelComboBox.setOnAction(actionEvent -> {
       loadVoxModel(modelComboBox.getValue());
     });
-    parent.getChildren().addAll(modelLabel, modelComboBox, importButton);
+    parent.getChildren().addAll(modelLabel, modelComboBox, importButton, new Separator());
   }
 
   private void initParameters(VBox parent) {
     //Parameters
     Label outputSizeLabel = new Label("Output Size:");
-    HBox outputSizeHbox = new HBox(3);
+    HBox outputSizeHbox = new HBox(4);
     int outputMaxSize = 100;
     int maxWidth = 50;
     TextField outputSizeXTextField = new TextField();
@@ -310,7 +313,7 @@ public class App extends Application {
     });
     outputSizeZTextField.setText(String.valueOf(outputSize.get().getZ()));
 
-    outputSizeHbox.getChildren().addAll(outputSizeXTextField, outputSizeYTextField, outputSizeZTextField);
+    outputSizeHbox.getChildren().addAll(outputSizeLabel, outputSizeXTextField, outputSizeYTextField, outputSizeZTextField);
 
     //Update textfield on value change
     outputSize.addListener((observable, oldValue, newValue) -> {
@@ -320,6 +323,7 @@ public class App extends Application {
     });
 
     //Pattern Size
+    HBox patternSizeHbox = new HBox(2);
     Label patternSizeLabel = new Label("Pattern Size:");
     TextField patternSizeTextField = new TextField();
 
@@ -342,6 +346,7 @@ public class App extends Application {
     patternSize.addListener((observable, oldValue, newValue) -> {
       patternSizeTextField.setText(newValue.toString());
     });
+    patternSizeHbox.getChildren().addAll(patternSizeLabel, patternSizeTextField);
 
     //Rotation
     CheckBox rotationCheckBox = new CheckBox("Rotation");
@@ -362,7 +367,8 @@ public class App extends Application {
     });
 
     //Seeding
-    Label seedLabel = new Label("Current seed: " + rngSeed.get());
+    HBox seedHbox = new HBox(2);
+    Label seedLabel = new Label("Seed:");
     TextField seedTextField = new TextField();
     seedTextField.textProperty().addListener((observable, oldValue, newValue) -> {
       if (!newValue.isEmpty()) {
@@ -372,25 +378,22 @@ public class App extends Application {
     });
 
     rngSeed.addListener((observable, oldValue, newValue) -> {
-      seedLabel.setText("Current seed: " + newValue.toString());
       seedTextField.setText(newValue.toString());
     });
-
+    seedHbox.getChildren().addAll(seedLabel, seedTextField);
     CheckBox seedCheckBox = new CheckBox("Use Seed");
     Bindings.bindBidirectional(seedCheckBox.selectedProperty(), this.useSeed);
 
     //Add to parent
     parent.getChildren().addAll(
-        outputSizeLabel,
         outputSizeHbox,
-        patternSizeLabel,
-        patternSizeTextField,
+        patternSizeHbox,
         rotationCheckBox,
         avoidEmptyPatternLabel,
         avoidEmptyPatternSlider,
-        seedLabel,
-        seedTextField,
-        seedCheckBox
+        seedHbox,
+        seedCheckBox,
+        new Separator()
     );
   }
 
