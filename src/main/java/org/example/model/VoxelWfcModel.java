@@ -79,7 +79,7 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
       //solve
       //collapse min entropy cell
       boolean success = false;
-      if(!borderCells.isEmpty()) {
+      if (!borderCells.isEmpty()) {
         success = propagate(borderCells);
         borderCells.clear();
       } else {
@@ -117,12 +117,12 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
       System.out.println("Success after " + tries + " tries.");
     }
 
-    //***Test****
-//        int errors1 = checkForErrors();
-
-    //*********
     int[][][] array = generateOutput();
     return array;
+  }
+
+  public Vector3<Integer> getInputSize() {
+    return input.size();
   }
 
   private boolean propagate(List<Integer> cellIndices) {
@@ -155,7 +155,9 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
         }
         List<Integer> neighbourCell = getWaveAt(neighbourPosition.getX(), neighbourPosition.getY(), neighbourPosition.getZ());
 
-        if(neighbourCell.size() == 1 && neighbourCell.get(0) == -1) continue;
+        if (neighbourCell.size() == 1 && neighbourCell.get(0) == -1) {
+          continue;
+        }
 
         HashSet<Integer> possiblePatterns = new HashSet<>();
         List<Integer> currentPatterns = wave.get(currentCell);
