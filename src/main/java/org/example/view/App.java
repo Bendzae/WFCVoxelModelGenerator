@@ -41,17 +41,12 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import jfxtras.styles.jmetro.JMetro;
-import jfxtras.styles.jmetro.Style;
 import org.example.model.VoxelWfcModel;
 import org.example.shared.VoxelWFCParameters;
 import org.example.voxparser.Vector3;
@@ -65,8 +60,6 @@ public class App extends Application {
   private static final int WIDTH = 1400;
   private static final int HEIGHT = 800;
   private static final int BOX_SIZE = 5;
-  private static final Color UI_BG_COLOR_PRIMARY = Color.gray(0.1);
-  private static final Color UI_BG_COLOR_SECONDARY = Color.gray(0.2);
   private static final Color VIEWER_BG_COLOR = Color.gray(0.1);
   private static String INPUT_MODELS_PATH = "src/main/resources/inputmodels";
 
@@ -92,19 +85,9 @@ public class App extends Application {
     stage.setTitle("Voxel Model Generator");
     //Root Element
     BorderPane parent = new BorderPane();
-    parent.backgroundProperty().setValue(
-        new Background(
-            new BackgroundFill(UI_BG_COLOR_SECONDARY, CornerRadii.EMPTY, Insets.EMPTY)
-        )
-    );
 
     //Left Menu
     VBox menu = new VBox();
-    menu.backgroundProperty().setValue(
-        new Background(
-            new BackgroundFill(UI_BG_COLOR_PRIMARY, CornerRadii.EMPTY, Insets.EMPTY)
-        )
-    );
     menu.setSpacing(15);
     menu.setPadding(new Insets(10));
 
@@ -139,8 +122,9 @@ public class App extends Application {
 
     //Show Scene
     stage.setScene(scene);
-    JMetro jMetro = new JMetro(Style.DARK);
-    jMetro.setScene(scene);
+//    JMetro jMetro = new JMetro(Style.DARK);
+//    jMetro.setScene(scene);
+    scene.getStylesheets().add(getClass().getResource("/modena.css").toExternalForm());
     scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
     stage.show();
   }

@@ -1,5 +1,5 @@
 .root {
-  -fx-font-size: 8pt;
+  -fx-font-size: 10pt;
 }
 
 .label {
@@ -14,7 +14,6 @@
   -fx-font-size: 12pt;
 }
 
-.separator {
-  -fx-padding: 20pt 0pt;
+VBox {
+  -fx-background-color: #343434;;
 }
-
