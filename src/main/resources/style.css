@@ -8,6 +8,7 @@
 
 .button {
   -fx-font-size: 10pt;
+  -fx-min-width: 100pt;
 }
 
 .check-box {
@@ -16,4 +17,12 @@
 
 VBox {
   -fx-background-color: #343434;;
+}
+
+.separator {
+  -fx-padding: 10pt 0;
+}
+
+.textbox {
+  -fx-max-width: 150pt;
 }

@@ -18,6 +18,15 @@
     <orderEntry type="library" name="Maven: org.openjfx:javafx-base:linux:15" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:15" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:linux:15" level="project" />
+    <orderEntry type="library" name="Maven: com.google.code.gson:gson:2.8.6" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:15" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:linux:15" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:15" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:linux:15" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:15" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:linux:15" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:15" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:linux:15" level="project" />
     <orderEntry type="library" name="Maven: org.joml:joml:1.9.23" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.gson:gson:2.8.6" level="project" />
   </component>

@@ -43,6 +43,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -367,14 +368,17 @@ public class App extends Application {
     seedHbox.getChildren().addAll(seedLabel, seedTextField);
     CheckBox seedCheckBox = new CheckBox("Use Seed");
     Bindings.bindBidirectional(seedCheckBox.selectedProperty(), this.useSeed);
-
     //Add to parent
     parent.getChildren().addAll(
         outputSizeHbox,
+        spacer(10),
         patternSizeHbox,
+        spacer(10),
         rotationCheckBox,
+        spacer(10),
         avoidEmptyPatternLabel,
         avoidEmptyPatternSlider,
+        spacer(10),
         seedHbox,
         seedCheckBox,
         new Separator()
@@ -437,6 +441,12 @@ public class App extends Application {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  private Region spacer(int height) {
+    var spacer = new Region();
+    spacer.setPrefHeight(height);
+    return spacer;
   }
 
   public static void main(String[] args) {
