@@ -1,5 +1,5 @@
 # WFC Voxel Model Generator  
-This project contains a, 3D-Implementation of the WFC Algorithm by Max Gumin 
+This project contains a 3D-Implementation of the WFC Algorithm by Max Gumin 
 (https://github.com/mxgmn/WaveFunctionCollapse) and a UI that allows
 loading example Voxel Models, manipulating Parameters of the algorithm aswell 
 as export the generated Models. This application was developed as part of a Bachelor-Thesis
@@ -15,7 +15,7 @@ in CS at HAW-Hamburg, in cooperation with Prof. Dr. Philip Jenke.
 ```
 git clone https://git.haw-hamburg.de/acg303/wfc.git
 ```
-(1) Move into the project directory and install dependencies with Maven
+(2) Move into the project directory and install dependencies with Maven
 ```
 cd wfc
 mvn install
@@ -31,3 +31,4 @@ the IDE has automatically installed all dependencies and run the Main-Class App.
 src/main/java/org.example/view/App.java
 ```
 ## Usage 
+![test](Sreenshot.png)
