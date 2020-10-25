@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -37,6 +38,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Separator;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
@@ -68,6 +70,7 @@ public class App extends Application {
   private static Scene scene;
   private VoxelModelViewer voxelModelViewer;
   private ComboBox<String> modelComboBox;
+  ProgressIndicator progressIndicator = new ProgressIndicator(-1.0);
 
   //WFC Parameters
   int[][][] inputArray;
@@ -143,11 +146,21 @@ public class App extends Application {
         avoidEmptyPattern.get(),
         this.rngSeed.get()
     );
-    currentSolution = voxelWfcModel.solve();
-    if (currentSolution != null) {
-      voxelModelViewer.setModel(currentSolution);
-    }
-    saveParametersForModelToJSON();
+    progressIndicator.setVisible(true);
+    voxelModelViewer.clear();
+    Thread solveThread = new Thread(() -> {
+      currentSolution = voxelWfcModel.solve();
+      Platform.runLater(() -> {
+        if (currentSolution != null) {
+          voxelModelViewer.setModel(currentSolution);
+          saveParametersForModelToJSON();
+        } else {
+          voxelModelViewer.setModel(inputArray);
+        }
+        progressIndicator.setVisible(false);
+      });
+    });
+    solveThread.start();
   }
 
   private void showPatterns() {
@@ -299,7 +312,8 @@ public class App extends Application {
     });
     outputSizeZTextField.setText(String.valueOf(outputSize.get().getZ()));
 
-    outputSizeHbox.getChildren().addAll(outputSizeLabel,
+    outputSizeHbox.getChildren().addAll(
+        outputSizeLabel,
         new Text("X:"),
         outputSizeXTextField,
         new Text("Y:"),
@@ -395,11 +409,19 @@ public class App extends Application {
 
   private void initButtons(VBox parent) {
     //Buttons
+    HBox generateHbox = new HBox(2);
+    generateHbox.setSpacing(10);
     Button generateButton = new Button("Generate");
-    generateButton.setOnAction(actionEvent -> generate());
+    generateHbox.getChildren().add(generateButton);
+    generateHbox.getChildren().add(progressIndicator);
+    progressIndicator.setVisible(false);
+    generateButton.setOnAction(actionEvent -> {
+      generate();
+    });
+
     Button showPatternsButton = new Button("Show Patterns");
     showPatternsButton.setOnAction(actionEvent -> showPatterns());
-    parent.getChildren().addAll(generateButton, showPatternsButton);
+    parent.getChildren().addAll(generateHbox, showPatternsButton);
   }
 
   private void initExportButton(VBox parent, Stage stage) {

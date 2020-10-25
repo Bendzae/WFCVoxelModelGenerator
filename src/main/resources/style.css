@@ -26,3 +26,8 @@ VBox {
 .textbox {
   -fx-max-width: 150pt;
 }
+
+.progress-indicator {
+  -fx-max-width: 20pt;
+  -fx-max-height: 20pt;
+}
