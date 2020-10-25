@@ -4,6 +4,8 @@ This project contains a 3D-Implementation of the WFC Algorithm by Max Gumin
 loading example Voxel Models, manipulating Parameters of the algorithm aswell 
 as export the generated Models. This application was developed as part of a Bachelor-Thesis
 in CS at HAW-Hamburg, in cooperation with Prof. Dr. Philip Jenke.
+
+
 ![test](./example.png)
 ## Setup
 ### Prerequisites
