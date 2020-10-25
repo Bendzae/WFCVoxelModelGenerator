@@ -31,4 +31,4 @@ the IDE has automatically installed all dependencies and run the Main-Class App.
 src/main/java/org.example/view/App.java
 ```
 ## Usage 
-![test](Sreenshot.png)
+![test](./Screenshot.png)
