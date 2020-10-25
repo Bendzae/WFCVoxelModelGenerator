@@ -46,6 +46,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.example.model.VoxelWfcModel;
@@ -261,7 +262,7 @@ public class App extends Application {
           intValue = outputMaxSize;
         }
         outputSizeXTextField.setText(String.valueOf(intValue));
-        outputSize.setValue(new Vector3<>(intValue, outputSize.get().getY(), outputSize.get().getZ()));
+        outputSize.setValue(new Vector3<>(intValue, outputSize.get().getY(), intValue));
       }
     });
     outputSizeXTextField.setText(String.valueOf(outputSize.get().getX()));
@@ -293,12 +294,19 @@ public class App extends Application {
           intValue = outputMaxSize;
         }
         outputSizeZTextField.setText(String.valueOf(intValue));
-        outputSize.setValue(new Vector3<>(outputSize.get().getX(), outputSize.get().getY(), intValue));
+        outputSize.setValue(new Vector3<>(intValue, outputSize.get().getY(), intValue));
       }
     });
     outputSizeZTextField.setText(String.valueOf(outputSize.get().getZ()));
 
-    outputSizeHbox.getChildren().addAll(outputSizeLabel, outputSizeXTextField, outputSizeYTextField, outputSizeZTextField);
+    outputSizeHbox.getChildren().addAll(outputSizeLabel,
+        new Text("X:"),
+        outputSizeXTextField,
+        new Text("Y:"),
+        outputSizeYTextField,
+        new Text("Z:"),
+        outputSizeZTextField
+    );
 
     //Update textfield on value change
     outputSize.addListener((observable, oldValue, newValue) -> {
