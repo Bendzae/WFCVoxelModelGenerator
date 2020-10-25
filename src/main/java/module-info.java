@@ -7,4 +7,5 @@ module org.example {
   opens org.example to javafx.fxml;
   exports org.example.view;
   exports org.example.model;
+  exports org.example.shared;
 }
