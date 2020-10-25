@@ -22,7 +22,7 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
   private int patternSize;
   private boolean rotation;
   private double avoidEmptyPattern;
-  private int maximumTries = 5000;
+  private int maximumTries = 500;
   private int maxPropagationTries = 10;
 
   private List<Pattern3D> patterns;
