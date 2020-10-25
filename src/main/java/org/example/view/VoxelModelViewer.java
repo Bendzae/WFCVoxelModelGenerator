@@ -24,8 +24,6 @@ public class VoxelModelViewer {
 
   private SubScene subScene;
 
-  private int width;
-  private int height;
   private int boxSize;
   private double anchorX, anchorY;
   private int[] palette = ColorUtils.DEFAULT_PALETTE;
@@ -36,8 +34,6 @@ public class VoxelModelViewer {
   private final DoubleProperty angleY = new SimpleDoubleProperty(0);
 
   public VoxelModelViewer(int width, int height, int boxSize, Color bgColor) {
-    this.width = width;
-    this.height = height;
     this.boxSize = boxSize;
     this.boxes = new SmartGroup();
 
