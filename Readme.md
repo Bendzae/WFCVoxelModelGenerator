@@ -4,7 +4,7 @@ This project contains a 3D-Implementation of the WFC Algorithm by Max Gumin
 loading example Voxel Models, manipulating Parameters of the algorithm aswell 
 as export the generated Models. This application was developed as part of a Bachelor-Thesis
 in CS at HAW-Hamburg, in cooperation with Prof. Dr. Philip Jenke.
-
+![test](./example.png)
 ## Setup
 ### Prerequisites
 * **Java JDK 11+** 
@@ -53,4 +53,4 @@ If an input model is loaded you can simply click the **Generate** button in (3) 
 ### Export
 To export the last generated model in .vox format, click **Export Model** in (3).
 ### 3D Viewer
-Navigation in the 3D-Viewer (4): Left-click and drag to rotate, mousewheel to zoom.
+Navigation in the 3D-Viewer (4): Left-or right-click and drag to rotate, mousewheel to zoom.
