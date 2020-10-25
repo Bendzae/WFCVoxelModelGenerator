@@ -391,10 +391,7 @@ public class App extends Application {
     generateButton.setOnAction(actionEvent -> generate());
     Button showPatternsButton = new Button("Show Patterns");
     showPatternsButton.setOnAction(actionEvent -> showPatterns());
-    Button clearInputButton = new Button("Clear");
-    clearInputButton.setOnAction(actionEvent -> clearInput());
-
-    parent.getChildren().addAll(generateButton, showPatternsButton, clearInputButton);
+    parent.getChildren().addAll(generateButton, showPatternsButton);
   }
 
   private void initExportButton(VBox parent, Stage stage) {

@@ -96,9 +96,9 @@ public class VoxelModelViewer {
 
   public void showPatterns(VoxelWfcModel voxelWfcModel, int patternSize) {
     boxes.getChildren().clear();
-    voxelWfcModel.patternsByPosition.get(0).forEach((pos, i) -> boxes.getChildren()
+    voxelWfcModel.getPatternsByPosition().get(0).forEach((pos, i) -> boxes.getChildren()
         .addAll(createBoxesFromVoxelArray(
-            voxelWfcModel.patterns.get(i).getRawArray(),
+            voxelWfcModel.getPatterns().get(i).getRawArray(),
             new Vector3<>(
                 (pos.getX() * 2) * patternSize - (voxelWfcModel.getInputSize().getX() * 2 / (patternSize)),
                 (pos.getY() * 2) * patternSize - (voxelWfcModel.getInputSize().getY() * 2 / (patternSize)),

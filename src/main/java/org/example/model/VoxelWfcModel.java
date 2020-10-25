@@ -12,6 +12,9 @@ import java.util.stream.Collectors;
 import org.example.shared.IVoxelAlgortithm;
 import org.example.voxparser.Vector3;
 
+/**
+ * This class implements a modified version of the WFC algorithm in 3D specialized for Voxel Models.
+ */
 public class VoxelWfcModel implements IVoxelAlgortithm {
 
   private Random rng;
@@ -22,18 +25,28 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
   private int maximumTries = 5000;
   private int maxPropagationTries = 10;
 
-  public List<Pattern3D> patterns;
-  public List<HashMap<Vector3<Integer>, Integer>> patternsByPosition;
+  private List<Pattern3D> patterns;
+  private List<HashMap<Vector3<Integer>, Integer>> patternsByPosition;
 
-  public List<Double> patternFrequency;
-  public HashMap<Integer, Neighbours> patternNeighbours;
+  private List<Double> patternFrequency;
+  private HashMap<Integer, Neighbours> patternNeighbours;
 
-  public List<List<Integer>> wave;
-  public List<Double> entropy;
-  public Vector3<Integer> outputSize;
+  private List<List<Integer>> wave;
+  private List<Double> entropy;
+  private Vector3<Integer> outputSize;
 
   private Double baseEntropy;
 
+  /**
+   * Initialization of the algorithm
+   *
+   * @param input 3D-Array of input model
+   * @param patternSize size of NxNxN patterns that should be extracted
+   * @param outputSize size of the output
+   * @param rotation should rotation be used
+   * @param avoidEmptyPattern how much should empty space be avoided
+   * @param rngSeed seed for reproduceability
+   */
   public VoxelWfcModel(
       int[][][] input,
       int patternSize,
@@ -42,26 +55,28 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
       double avoidEmptyPattern,
       long rngSeed
   ) {
-    boolean inputPadding = true;
-    if (inputPadding) {
-      this.input = new Grid3D(input, patternSize);
-    } else {
-      this.input = new Grid3D(input);
-    }
+    this.input = new Grid3D(input, patternSize);
     this.patternSize = patternSize;
     this.rotation = rotation;
     this.avoidEmptyPattern = avoidEmptyPattern;
-//        int calculatedOutputSize = outputSize.x / (patternSize - 1);
-//        this.outputSize = new Vector2i(calculatedOutputSize, calculatedOutputSize);
-    this.outputSize = new Vector3<>(outputSize.getX() + 2, outputSize.getY() + 2, outputSize.getZ() + 2);
+    this.outputSize = new Vector3<>(
+        outputSize.getX() + 2,
+        outputSize.getY() + 2,
+        outputSize.getZ() + 2
+    ); // + 2 beacuse of padding
     this.rng = new Random(rngSeed);
 
-    System.out.println("Input size: " + this.input.size());
     findPatterns();
     findNeighbours();
   }
 
+  /**
+   * Generate a new model with the given parameters.
+   *
+   * @return 3D-Array of the output model.
+   */
   public int[][][] solve() {
+    //Initialization
     ArrayList<Integer> borderCells = initializeWave();
     baseEntropy = getEntropy(0);
     int collapsedCells = (int) wave.stream().filter(l -> l.size() == 1).count();
@@ -70,6 +85,7 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
     this.entropy = wave.stream().map(this::getEntropy).collect(Collectors.toList());
 
     System.out.print("Attempt number: ");
+    //main loop
     while (collapsedCells < outputSize.getX() * outputSize.getY() * outputSize.getZ() && tries < maximumTries) {
 
       //create backup if propagation fails
@@ -77,20 +93,18 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
       wave.forEach(cell -> snapshot.add(new ArrayList<>(cell)));
 
       //solve
-      //collapse min entropy cell
       boolean success = false;
       if (!borderCells.isEmpty()) {
+        //Border cells need to be propagated first
         success = propagate(borderCells);
         borderCells.clear();
       } else {
+        //collapse min entropy cell
         int minEntropyIndex = getLowestEntropyCell();
         wave.set(minEntropyIndex, Collections.singletonList(selectRandomPattern(minEntropyIndex)));
         this.entropy.set(minEntropyIndex, getEntropy(minEntropyIndex));
         success = propagate(Collections.singletonList(minEntropyIndex));
       }
-//            if (checkForErrors() > 0) {
-////                //throw new RuntimeException("Error after prop");
-////            }
 
       if (!success) {
         if (propagationTries >= maxPropagationTries) {
@@ -98,7 +112,6 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
           System.out.print(tries + ",");
           borderCells = initializeWave();
           this.entropy = wave.stream().map(this::getEntropy).collect(Collectors.toList());
-          collapsedCells = 0;
         } else {
           wave = snapshot;
           this.entropy = wave.stream().map(this::getEntropy).collect(Collectors.toList());
@@ -125,163 +138,18 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
     return input.size();
   }
 
-  private boolean propagate(List<Integer> cellIndices) {
-    Queue<Integer> cellsToPropagate = new LinkedList<>();
-
-    cellsToPropagate.addAll(cellIndices);
-    while (!cellsToPropagate.isEmpty()) {
-      int currentCell = cellsToPropagate.poll();
-
-      Vector3<Integer> cellPosition = getPosFromCellIndex(currentCell);
-
-      for (int i = 0; i < Direction3D.values().length; i++) {
-        Direction3D direction = Direction3D.values()[i];
-        Vector3<Integer> dir = Utils.DIRECTIONS3D.get(i);
-
-        Vector3<Integer> neighbourPosition = new Vector3<Integer>(
-            cellPosition.getX() + dir.getX(),
-            cellPosition.getY() + dir.getY(),
-            cellPosition.getZ() + dir.getZ()
-        );
-
-        if (neighbourPosition.getX() < 0
-            || neighbourPosition.getX() >= outputSize.getX()
-            || neighbourPosition.getY() < 0
-            || neighbourPosition.getY() >= outputSize.getY()
-            || neighbourPosition.getZ() < 0
-            || neighbourPosition.getZ() >= outputSize.getZ()
-        ) {
-          continue;
-        }
-        List<Integer> neighbourCell = getWaveAt(neighbourPosition.getX(), neighbourPosition.getY(), neighbourPosition.getZ());
-
-        if (neighbourCell.size() == 1 && neighbourCell.get(0) == -1) {
-          continue;
-        }
-
-        HashSet<Integer> possiblePatterns = new HashSet<>();
-        List<Integer> currentPatterns = wave.get(currentCell);
-        for (Integer pattern : currentPatterns) {
-          List<Integer> patterns = neighbourCell.stream()
-              .filter(neighbourPattern -> patternNeighbours.get(pattern).neighbours.get(direction).contains(neighbourPattern))
-              .collect(Collectors.toList());
-          possiblePatterns.addAll(patterns);
-        }
-
-        int neighbourIndex = getCellIndexFromPos(neighbourPosition.getX(), neighbourPosition.getY(), neighbourPosition.getZ());
-        List<Integer> newPatterns = new ArrayList<Integer>(possiblePatterns);
-        if (newPatterns.size() < neighbourCell.size()) {
-          wave.set(neighbourIndex, newPatterns);
-          this.entropy.set(neighbourIndex, getEntropy(neighbourIndex));
-          cellsToPropagate.add(neighbourIndex);
-        }
-
-        if (possiblePatterns.size() == 0) {/* restart algorithm */
-          return false;
-        }
-      }
-    }
-    return true;
+  public List<Pattern3D> getPatterns() {
+    return patterns;
   }
 
-  private ArrayList<Integer> initializeWave() {
-    ArrayList<Integer> floorCells = new ArrayList<>();
-    ArrayList<Integer> paddingCells = new ArrayList<>();
-    wave = new ArrayList<>();
-    for (int x = 0; x < outputSize.getX(); x++) {
-      for (int y = 0; y < outputSize.getY(); y++) {
-        for (int z = 0; z < outputSize.getZ(); z++) {
-          wave.add(new ArrayList<>());
-          List<Integer> waveCell = wave.get(wave.size() - 1);
-          if (y == outputSize.getY() - 1) {
-            waveCell.add(-1);
-            floorCells.add(wave.size() - 1);
-          } else if (x == 0 || x == outputSize.getX() - 1 || y == 0 || z == 0 || z == outputSize.getZ() - 1) {
-            waveCell.add(0);
-            paddingCells.add(wave.size() - 1);
-          } else {
-            for (int i = 0; i < patterns.size(); i++) {
-              waveCell.add(i);
-            }
-          }
-        }
-      }
-    }
-    floorCells.addAll(paddingCells);
-    return floorCells;
+  public List<HashMap<Vector3<Integer>, Integer>> getPatternsByPosition() {
+    return patternsByPosition;
   }
 
-  private int[][][] generateOutput() {
-    int sizeX = outputSize.getX() * patternSize;
-    int sizeY = (outputSize.getY() - 1) * patternSize;
-    int sizeZ = outputSize.getZ() * patternSize;
-    int[][][] grid = new int[sizeZ][sizeY][sizeX];
-    for (int z = 0; z < outputSize.getZ(); z++) {
-      for (int y = 0; y < outputSize.getY() - 1; y++) {
-        for (int x = 0; x < outputSize.getX(); x++) {
-          Integer patternIndex = getWaveAt(x, y, z).get(0);
-          Pattern3D pattern = patternIndex >= 0 ? patterns.get(patternIndex) : new Pattern3D(this.patternSize);
-          if (y >= (outputSize.getY() - 1)) {
-            System.out.println(patternIndex);
-          }
-          for (int px = 0; px < patternSize; px++) {
-            for (int py = 0; py < patternSize; py++) {
-              for (int pz = 0; pz < patternSize; pz++) {
-                grid[z * patternSize + pz][y * patternSize + py][x * patternSize + px] = pattern.get(px, py, pz);
-              }
-            }
-          }
-        }
-      }
-    }
-    return grid;
-  }
-
-  private double getEntropy(int cellIndex) {
-    return getEntropy(wave.get(cellIndex));
-  }
-
-  private double getEntropy(Vector3<Integer> cellPosition) {
-    return getEntropy(getWaveAt(cellPosition.getX(), cellPosition.getY(), cellPosition.getZ()));
-  }
-
-  private double getEntropy(List<Integer> cell) {
-
-    if (cell.size() == 1) {
-      return 0;
-    }
-
-    double sumOfWeights = cell.stream()
-        .map(index -> patternFrequency.get(index))
-        .reduce(0d, Double::sum, Double::sum);
-
-    double logSumOfWeights = cell.stream()
-        .map(index -> patternFrequency.get(index))
-        .reduce(0d, (sum, weight) -> sum + (weight * log2(weight)), Double::sum);
-
-    return log2(sumOfWeights) - (logSumOfWeights / sumOfWeights) + (2e-10 * rng.nextDouble());
-  }
-
-  private double log2(double value) {
-    return Math.log(value) / Math.log(2);
-  }
-
-  public int getCellIndexFromPos(int x, int y, int z) {
-    return x + y * outputSize.getX() + z * outputSize.getX() * outputSize.getY();
-  }
-
-  private List<Integer> getWaveAt(int x, int y, int z) {
-    return wave.get(getCellIndexFromPos(x, y, z));
-  }
-
-  public Vector3<Integer> getPosFromCellIndex(int index) {
-    int x = index % outputSize.getX();
-    int y = (index / outputSize.getX()) % outputSize.getY();
-    int z = index / (outputSize.getX() * outputSize.getY());
-    return new Vector3<>(x, y, z);
-  }
-
-  public void findPatterns() {
+  /**
+   * Extract and process patterns from input model
+   */
+  private void findPatterns() {
 
     ArrayList<Grid3D> inputs = new ArrayList<>();
     inputs.add(input);
@@ -353,13 +221,9 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
     normalizePatternFrequency(totalPatternCount);
   }
 
-  private void normalizePatternFrequency(int totalPatternCount) {
-    for (int i = 0; i < patternFrequency.size(); i++) {
-      double repetitions = patternFrequency.get(i);
-      patternFrequency.set(i, repetitions / totalPatternCount);
-    }
-  }
-
+  /**
+   * Find adjacency constraints
+   */
   private void findNeighbours() {
 
     this.patternNeighbours = new HashMap<>();
@@ -368,13 +232,6 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
     }
     // Border Pattern
     this.patternNeighbours.put(-1, new Neighbours());
-
-//    for (int i = 0; i < 6; i++) {
-//      Direction3D dir = Direction3D.values()[i];
-//      for (int j = 0; j < patterns.size(); j++) {
-//        this.patternNeighbours[0].addNeighbour(dir, j);
-//      }
-//    }
 
     patternsByPosition.forEach(currentRotation -> {
       currentRotation.forEach((position, patternIndex) -> {
@@ -396,6 +253,169 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
     });
   }
 
+  /**
+   * Initialize the wave by adding possible patterns to each cell and adding a padding of empty (index: 0) and floor(index: -1)
+   * cells around the edges.
+   *
+   * @return List of edge and floor cell indices
+   */
+  private ArrayList<Integer> initializeWave() {
+    ArrayList<Integer> floorCells = new ArrayList<>();
+    ArrayList<Integer> paddingCells = new ArrayList<>();
+    wave = new ArrayList<>();
+    for (int x = 0; x < outputSize.getX(); x++) {
+      for (int y = 0; y < outputSize.getY(); y++) {
+        for (int z = 0; z < outputSize.getZ(); z++) {
+          wave.add(new ArrayList<>());
+          List<Integer> waveCell = wave.get(wave.size() - 1);
+          if (y == outputSize.getY() - 1) {
+            waveCell.add(-1);
+            floorCells.add(wave.size() - 1);
+          } else if (x == 0 || x == outputSize.getX() - 1 || y == 0 || z == 0 || z == outputSize.getZ() - 1) {
+            waveCell.add(0);
+            paddingCells.add(wave.size() - 1);
+          } else {
+            for (int i = 0; i < patterns.size(); i++) {
+              waveCell.add(i);
+            }
+          }
+        }
+      }
+    }
+    floorCells.addAll(paddingCells);
+    return floorCells;
+  }
+
+  /**
+   * Propagate changes through the model until state is consistent with adjacency constraints or a contradiction happens.
+   *
+   * @param cellIndices Cells to propagate
+   * @return true -> success, false -> contradiction
+   */
+  private boolean propagate(List<Integer> cellIndices) {
+    Queue<Integer> cellsToPropagate = new LinkedList<>();
+
+    cellsToPropagate.addAll(cellIndices);
+    while (!cellsToPropagate.isEmpty()) {
+      int currentCell = cellsToPropagate.poll();
+
+      Vector3<Integer> cellPosition = getPosFromCellIndex(currentCell);
+
+      for (int i = 0; i < Direction3D.values().length; i++) {
+        Direction3D direction = Direction3D.values()[i];
+        Vector3<Integer> dir = Utils.DIRECTIONS3D.get(i);
+
+        Vector3<Integer> neighbourPosition = new Vector3<Integer>(
+            cellPosition.getX() + dir.getX(),
+            cellPosition.getY() + dir.getY(),
+            cellPosition.getZ() + dir.getZ()
+        );
+
+        if (neighbourPosition.getX() < 0
+            || neighbourPosition.getX() >= outputSize.getX()
+            || neighbourPosition.getY() < 0
+            || neighbourPosition.getY() >= outputSize.getY()
+            || neighbourPosition.getZ() < 0
+            || neighbourPosition.getZ() >= outputSize.getZ()
+        ) {
+          continue;
+        }
+        List<Integer> neighbourCell = getWaveAt(neighbourPosition.getX(), neighbourPosition.getY(), neighbourPosition.getZ());
+
+        if (neighbourCell.size() == 1 && neighbourCell.get(0) == -1) {
+          continue;
+        }
+
+        HashSet<Integer> possiblePatterns = new HashSet<>();
+        List<Integer> currentPatterns = wave.get(currentCell);
+        for (Integer pattern : currentPatterns) {
+          List<Integer> patterns = neighbourCell.stream()
+              .filter(neighbourPattern -> patternNeighbours.get(pattern).neighbours.get(direction).contains(neighbourPattern))
+              .collect(Collectors.toList());
+          possiblePatterns.addAll(patterns);
+        }
+
+        int neighbourIndex = getCellIndexFromPos(neighbourPosition.getX(), neighbourPosition.getY(), neighbourPosition.getZ());
+        List<Integer> newPatterns = new ArrayList<Integer>(possiblePatterns);
+        if (newPatterns.size() < neighbourCell.size()) {
+          wave.set(neighbourIndex, newPatterns);
+          this.entropy.set(neighbourIndex, getEntropy(neighbourIndex));
+          cellsToPropagate.add(neighbourIndex);
+        }
+
+        if (possiblePatterns.size() == 0) {/* restart algorithm */
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Generate output from collapsed wave.
+   *
+   * @return 3D-Array of output model
+   */
+  private int[][][] generateOutput() {
+    int sizeX = outputSize.getX() * patternSize;
+    int sizeY = (outputSize.getY() - 1) * patternSize;
+    int sizeZ = outputSize.getZ() * patternSize;
+    int[][][] grid = new int[sizeZ][sizeY][sizeX];
+    for (int z = 0; z < outputSize.getZ(); z++) {
+      for (int y = 0; y < outputSize.getY() - 1; y++) {
+        for (int x = 0; x < outputSize.getX(); x++) {
+          Integer patternIndex = getWaveAt(x, y, z).get(0);
+          Pattern3D pattern = patternIndex >= 0 ? patterns.get(patternIndex) : new Pattern3D(this.patternSize);
+          if (y >= (outputSize.getY() - 1)) {
+            System.out.println(patternIndex);
+          }
+          for (int px = 0; px < patternSize; px++) {
+            for (int py = 0; py < patternSize; py++) {
+              for (int pz = 0; pz < patternSize; pz++) {
+                grid[z * patternSize + pz][y * patternSize + py][x * patternSize + px] = pattern.get(px, py, pz);
+              }
+            }
+          }
+        }
+      }
+    }
+    return grid;
+  }
+
+  /**
+   * Get entropy value of given cell
+   */
+  private double getEntropy(int cellIndex) {
+    return getEntropy(wave.get(cellIndex));
+  }
+
+  /**
+   * Get entropy value of given cell
+   */
+  private double getEntropy(Vector3<Integer> cellPosition) {
+    return getEntropy(getWaveAt(cellPosition.getX(), cellPosition.getY(), cellPosition.getZ()));
+  }
+
+  /**
+   * Get entropy value of given cell
+   */
+  private double getEntropy(List<Integer> cell) {
+
+    if (cell.size() == 1) {
+      return 0;
+    }
+
+    double sumOfWeights = cell.stream()
+        .map(index -> patternFrequency.get(index))
+        .reduce(0d, Double::sum, Double::sum);
+
+    double logSumOfWeights = cell.stream()
+        .map(index -> patternFrequency.get(index))
+        .reduce(0d, (sum, weight) -> sum + (weight * log2(weight)), Double::sum);
+
+    return log2(sumOfWeights) - (logSumOfWeights / sumOfWeights) + (2e-10 * rng.nextDouble());
+  }
+
   private int getLowestEntropyCell() {
     double min = Double.MAX_VALUE;
     int minIndex = -1;
@@ -406,7 +426,6 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
       }
     }
     if (minIndex == -1) {
-//            throw new RuntimeException("couldnt find lowest entropy cell.");
       return 0;
     }
     return minIndex;
@@ -428,5 +447,33 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
       }
     }
     return cell.get(cell.size() - 1);
+  }
+
+  //Utility methods
+
+  private void normalizePatternFrequency(int totalPatternCount) {
+    for (int i = 0; i < patternFrequency.size(); i++) {
+      double repetitions = patternFrequency.get(i);
+      patternFrequency.set(i, repetitions / totalPatternCount);
+    }
+  }
+
+  private double log2(double value) {
+    return Math.log(value) / Math.log(2);
+  }
+
+  public int getCellIndexFromPos(int x, int y, int z) {
+    return x + y * outputSize.getX() + z * outputSize.getX() * outputSize.getY();
+  }
+
+  private List<Integer> getWaveAt(int x, int y, int z) {
+    return wave.get(getCellIndexFromPos(x, y, z));
+  }
+
+  public Vector3<Integer> getPosFromCellIndex(int index) {
+    int x = index % outputSize.getX();
+    int y = (index / outputSize.getX()) % outputSize.getY();
+    int z = index / (outputSize.getX() * outputSize.getY());
+    return new Vector3<>(x, y, z);
   }
 }
