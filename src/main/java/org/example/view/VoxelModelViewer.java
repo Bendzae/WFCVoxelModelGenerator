@@ -16,7 +16,7 @@ import javafx.scene.shape.Box;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Transform;
 import org.example.model.VoxelWfcModel;
-import org.example.voxparser.Vector3;
+import org.example.shared.Vector3;
 
 public class VoxelModelViewer {
 

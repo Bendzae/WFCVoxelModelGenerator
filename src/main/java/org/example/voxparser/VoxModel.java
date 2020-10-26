@@ -2,6 +2,7 @@ package org.example.voxparser;
 
 import java.util.Arrays;
 import java.util.Objects;
+import org.example.shared.Vector3;
 
 public final class VoxModel {
 

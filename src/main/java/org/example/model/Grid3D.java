@@ -1,6 +1,6 @@
 package org.example.model;
 
-import org.example.voxparser.Vector3;
+import org.example.shared.Vector3;
 
 public class Grid3D {
 

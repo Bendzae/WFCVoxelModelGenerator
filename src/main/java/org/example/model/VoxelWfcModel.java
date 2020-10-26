@@ -9,32 +9,35 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Random;
 import java.util.stream.Collectors;
-import org.example.shared.IVoxelAlgortithm;
-import org.example.voxparser.Vector3;
+import org.example.shared.IVoxelAlgorithm;
+import org.example.shared.Vector3;
 
 /**
  * This class implements a modified version of the WFC algorithm in 3D specialized for Voxel Models.
  */
-public class VoxelWfcModel implements IVoxelAlgortithm {
+public class VoxelWfcModel implements IVoxelAlgorithm {
 
-  private Random rng;
+
+  //Parameters
   private Grid3D input;
   private int patternSize;
   private boolean rotation;
   private double avoidEmptyPattern;
+  private Vector3<Integer> outputSize;
+
+  //Internal Parameters
   private int maximumTries = 500;
   private int maxPropagationTries = 10;
 
-  private List<Pattern3D> patterns;
-  private List<HashMap<Vector3<Integer>, Integer>> patternsByPosition;
+  //Internal Datastructures
+  private Random rng;
 
+  private List<Pattern3D> patterns;
   private List<Double> patternFrequency;
   private HashMap<Integer, Neighbours> patternNeighbours;
-
+  private List<HashMap<Vector3<Integer>, Integer>> patternsByPosition;
   private List<List<Integer>> wave;
   private List<Double> entropy;
-  private Vector3<Integer> outputSize;
-
   private Double baseEntropy;
 
   /**
@@ -237,7 +240,7 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
       currentRotation.forEach((position, patternIndex) -> {
         for (int i = 0; i < 6; i++) {
           Direction3D dir = Direction3D.values()[i];
-          Vector3<Integer> dirV = Utils.DIRECTIONS3D.get(i);
+          Vector3<Integer> dirV = Utils.DIRECTIONS.get(i);
 
           Vector3<Integer> newPos =
               new Vector3<>(position.getX() + dirV.getX(), position.getY() + dirV.getY(), position.getZ() + dirV.getZ());
@@ -303,7 +306,7 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
 
       for (int i = 0; i < Direction3D.values().length; i++) {
         Direction3D direction = Direction3D.values()[i];
-        Vector3<Integer> dir = Utils.DIRECTIONS3D.get(i);
+        Vector3<Integer> dir = Utils.DIRECTIONS.get(i);
 
         Vector3<Integer> neighbourPosition = new Vector3<Integer>(
             cellPosition.getX() + dir.getX(),
@@ -462,7 +465,7 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
     return Math.log(value) / Math.log(2);
   }
 
-  public int getCellIndexFromPos(int x, int y, int z) {
+  private int getCellIndexFromPos(int x, int y, int z) {
     return x + y * outputSize.getX() + z * outputSize.getX() * outputSize.getY();
   }
 
@@ -470,7 +473,7 @@ public class VoxelWfcModel implements IVoxelAlgortithm {
     return wave.get(getCellIndexFromPos(x, y, z));
   }
 
-  public Vector3<Integer> getPosFromCellIndex(int index) {
+  private Vector3<Integer> getPosFromCellIndex(int index) {
     int x = index % outputSize.getX();
     int y = (index / outputSize.getX()) % outputSize.getY();
     int z = index / (outputSize.getX() * outputSize.getY());

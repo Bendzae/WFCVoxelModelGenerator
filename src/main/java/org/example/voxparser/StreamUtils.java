@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
+import org.example.shared.Vector3;
 
 public final class StreamUtils {
     static int readIntLE(InputStream stream) throws IOException {

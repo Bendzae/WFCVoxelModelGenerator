@@ -52,8 +52,8 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.example.model.VoxelWfcModel;
+import org.example.shared.Vector3;
 import org.example.shared.VoxelWFCParameters;
-import org.example.voxparser.Vector3;
 import org.example.voxparser.VoxSerializer;
 
 /**

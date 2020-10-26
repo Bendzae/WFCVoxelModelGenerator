@@ -30,4 +30,9 @@
     <orderEntry type="library" name="Maven: org.joml:joml:1.9.23" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.gson:gson:2.8.6" level="project" />
   </component>
+  <component name="copyright">
+    <Base>
+      <setting name="state" value="2" />
+    </Base>
+  </component>
 </module>

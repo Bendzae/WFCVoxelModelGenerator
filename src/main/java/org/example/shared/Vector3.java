@@ -1,4 +1,4 @@
-package org.example.voxparser;
+package org.example.shared;
 
 import java.util.Objects;
 

@@ -1,6 +1,7 @@
 package org.example.voxparser;
 
 import java.util.Objects;
+import org.example.shared.Vector3;
 
 public final class Voxel {
     private final Vector3<Byte> position;

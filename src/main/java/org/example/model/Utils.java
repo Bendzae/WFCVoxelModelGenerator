@@ -1,26 +1,18 @@
 package org.example.model;
 
 import java.util.List;
-import org.example.voxparser.Vector3;
-import org.joml.Vector2i;
+import org.example.shared.Vector3;
 
 public class Utils {
 
-    public static final Vector2i LEFT = new Vector2i(-1, 0);
-    public static final Vector2i RIGHT = new Vector2i(1, 0);
-    public static final Vector2i UP = new Vector2i(0, -1);
-    public static final Vector2i DOWN = new Vector2i(0, 1);
+    public static final Vector3<Integer> LEFT = new Vector3(-1, 0, 0);
+    public static final Vector3<Integer> RIGHT = new Vector3(1, 0, 0);
+    public static final Vector3<Integer> UP = new Vector3(0, -1, 0);
+    public static final Vector3<Integer> DOWN = new Vector3(0, 1, 0);
+    public static final Vector3<Integer> FORWARD = new Vector3(0, 0, 1);
+    public static final Vector3<Integer> BACKWARD = new Vector3(0, 0, -1);
 
-
-    public static final Vector3<Integer> LEFT3D = new Vector3(-1, 0, 0);
-    public static final Vector3<Integer> RIGHT3D = new Vector3(1, 0, 0);
-    public static final Vector3<Integer> UP3D = new Vector3(0, -1, 0);
-    public static final Vector3<Integer> DOWN3D = new Vector3(0, 1, 0);
-    public static final Vector3<Integer> FORWARD3D = new Vector3(0, 0, 1);
-    public static final Vector3<Integer> BACKWARD3D = new Vector3(0, 0, -1);
-
-    public static final List<Vector2i> DIRECTIONS = List.of(LEFT, RIGHT, UP, DOWN);
-    public static final List<Vector3<Integer>> DIRECTIONS3D = List.of(LEFT3D, RIGHT3D, UP3D, DOWN3D,FORWARD3D,BACKWARD3D);
+    public static final List<Vector3<Integer>> DIRECTIONS = List.of(LEFT, RIGHT, UP, DOWN, FORWARD, BACKWARD);
 
     public static String print2DArray(int[][] array) {
         StringBuilder stringBuilder = new StringBuilder();

@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.example.voxparser.Vector3;
+import org.example.shared.Vector3;
 import org.example.voxparser.VoxFile;
 import org.example.voxparser.VoxModel;
 import org.example.voxparser.VoxReader;

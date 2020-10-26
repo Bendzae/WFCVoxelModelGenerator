@@ -2,6 +2,7 @@ package org.example.voxparser;
 
 import java.io.IOException;
 import java.io.InputStream;
+import org.example.shared.Vector3;
 
 final class VoxSizeChunk extends VoxChunk {
     private final Vector3<Integer> size;
