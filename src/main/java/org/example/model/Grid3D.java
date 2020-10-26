@@ -29,11 +29,6 @@ public class Grid3D {
         }
     }
 
-    public Grid3D(Vector3<Integer> size) {
-        this.size = size;
-        this.grid = new int[size.getZ()][size.getY()][size.getX()];
-    }
-
     public Vector3<Integer> size() {
         return size;
     }
@@ -45,28 +40,6 @@ public class Grid3D {
     public int get(int x, int y, int z) {
         checkBounds(x, y, z);
         return grid[z][y][x];
-    }
-
-//    public int getWrapped(Vector2i position) {
-//        return getWrapped(position.x(), position.y());
-//    }
-
-//    public int getWrapped(int x, int y) {
-//
-//        int wrappedX = x % size.x();
-//        if (wrappedX < 0) wrappedX = size.x() + wrappedX;
-//        int wrappedY = y % size.y();
-//        if (wrappedY < 0) wrappedY = size.y() + wrappedY;
-//        return grid[wrappedY][wrappedX];
-//    }
-
-    public void set(Vector3<Integer> position, int value) {
-        set(position.getX(), position.getY(), position.getZ(), value);
-    }
-
-    public void set(int x, int y, int z, int value) {
-        checkBounds(x, y, z);
-        grid[z][y][x] = value;
     }
 
     public Pattern3D getPatternAtPosition(Vector3<Integer> position, int patternSize) {
@@ -108,10 +81,5 @@ public class Grid3D {
         if (x >= size.getX() || x < 0 || y >= size.getY() || y < 0 || z >= size.getZ() || z < 0) {
             throw new IllegalArgumentException("Coordinates out of bound.");
         }
-    }
-
-    @Override
-    public String toString() {
-        return "TODO";
     }
 }
