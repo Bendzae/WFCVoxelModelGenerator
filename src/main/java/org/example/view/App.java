@@ -179,6 +179,14 @@ public class App extends Application {
       return;
     }
     String filepath = INPUT_MODELS_PATH + "/" + filename;
+    loadParamsFromFile(filepath);
+    VoxelViewModel voxelViewModel = ModelImporterExporter.loadVoxelModelFromFile(filepath);
+    inputArray = voxelViewModel.getVoxelData();
+    this.voxelModelViewer.setPalette(voxelViewModel.getPalette());
+    this.voxelModelViewer.setModel(inputArray);
+  }
+
+  private void loadParamsFromFile(String filepath) {
     File paramsFile = new File(filepath.replace(".vox", "_params.json"));
 
     if (paramsFile.isFile()) {
@@ -198,10 +206,6 @@ public class App extends Application {
         e.printStackTrace();
       }
     }
-    VoxelViewModel voxelViewModel = ModelImporterExporter.loadVoxelModelFromFile(filepath);
-    inputArray = voxelViewModel.getVoxelData();
-    this.voxelModelViewer.setPalette(voxelViewModel.getPalette());
-    this.voxelModelViewer.setModel(inputArray);
   }
 
   private void clearInput() {
