@@ -54,7 +54,6 @@ import javafx.stage.Stage;
 import org.example.model.VoxelWfcModel;
 import org.example.shared.Vector3;
 import org.example.shared.VoxelWFCParameters;
-import org.example.voxparser.VoxSerializer;
 
 /**
  * JavaFX App
@@ -199,7 +198,7 @@ public class App extends Application {
         e.printStackTrace();
       }
     }
-    VoxelViewModel voxelViewModel = ModelConverter.loadVoxelModelFromFile(filepath);
+    VoxelViewModel voxelViewModel = ModelImporterExporter.loadVoxelModelFromFile(filepath);
     inputArray = voxelViewModel.getVoxelData();
     this.voxelModelViewer.setPalette(voxelViewModel.getPalette());
     this.voxelModelViewer.setModel(inputArray);
@@ -439,8 +438,7 @@ public class App extends Application {
 
       if (file != null && this.currentSolution != null) {
         //Export
-        VoxSerializer voxSerializer = new VoxSerializer();
-        voxSerializer.writeToVox(ModelConverter.arrayToVoxModel(this.currentSolution), voxelModelViewer.getPalette(), file);
+        ModelImporterExporter.writeVoxelModelToFile(this.currentSolution, voxelModelViewer.getPalette(), file);
       }
     });
 
