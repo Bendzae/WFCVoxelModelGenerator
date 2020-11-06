@@ -337,7 +337,7 @@ public class App extends Application {
     Label patternSizeLabel = new Label("Pattern Size:");
     TextField patternSizeTextField = new TextField();
 
-    int patternMaxSize = 10;
+    int patternMaxSize = 30;
     patternSizeTextField.textProperty().addListener((observable, oldValue, newValue) -> {
       if (!newValue.matches("\\d{0,10}")) {
         patternSizeTextField.setText(oldValue);
