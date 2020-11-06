@@ -37,6 +37,9 @@ final class ChunkFactory {
             case "NOTE":
                 chunk = new VoxDummyChunk();
                 break;
+            default:
+                chunk = new VoxDummyChunk();
+                break;
         }
 
         return Optional.ofNullable(chunk);
