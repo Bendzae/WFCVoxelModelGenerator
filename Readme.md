@@ -6,7 +6,7 @@ as export the generated Models. This application was developed as part of a Bach
 in CS at HAW-Hamburg, in cooperation with Prof. Dr. Philip Jenke.
 
 
-![test](./example.png)
+![i1](./example.png)
 ## Setup
 ### Prerequisites
 * **Java JDK 11+** 
@@ -56,3 +56,8 @@ If an input model is loaded you can simply click the **Generate** button in (3) 
 To export the last generated model in .vox format, click **Export Model** in (3).
 ### 3D Viewer
 Navigation in the 3D-Viewer (4): Left-or right-click and drag to rotate, mousewheel to zoom.
+
+## More Examples
+![i2](./tower_result.png)
+![i3](./tree_result.png)
+![i4](./river_result.png)
