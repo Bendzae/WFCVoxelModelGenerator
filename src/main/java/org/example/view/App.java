@@ -126,8 +126,6 @@ public class App extends Application {
 
     //Show Scene
     stage.setScene(scene);
-//    JMetro jMetro = new JMetro(Style.DARK);
-//    jMetro.setScene(scene);
     scene.getStylesheets().add(getClass().getResource("/modena.css").toExternalForm());
     scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
     stage.show();
