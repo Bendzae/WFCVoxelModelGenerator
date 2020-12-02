@@ -1,5 +1,8 @@
 package org.example.shared;
 
+/**
+ * Parameters of the Voxel-WFC for serialization.
+ */
 public class VoxelWFCParameters {
 
   public int patternSize;

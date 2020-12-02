@@ -5,6 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+/**
+ * Extends the JVox library to be able to write .vox files.
+ */
 public class VoxSerializer {
 
   public static final byte[] VOX = new byte[]{

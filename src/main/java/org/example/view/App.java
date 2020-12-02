@@ -52,11 +52,13 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.example.model.VoxelWfcModel;
+import org.example.shared.IVoxelAlgorithm;
 import org.example.shared.Vector3;
 import org.example.shared.VoxelWFCParameters;
 
 /**
- * JavaFX App
+ * Main class off the JavaFX application, used to intitialize the UI and and input bindings as well as storage and management of the
+ * current algorithm parameters and results.
  */
 public class App extends Application {
 
@@ -135,7 +137,7 @@ public class App extends Application {
     if (!this.useSeed.get()) {
       this.rngSeed.set((long) (Math.random() * 10000));
     }
-    VoxelWfcModel voxelWfcModel = new VoxelWfcModel(
+    IVoxelAlgorithm voxelWfcModel = new VoxelWfcModel(
         inputArray,
         patternSize.get(),
         outputSize.get(),
@@ -161,7 +163,7 @@ public class App extends Application {
   }
 
   private void showPatterns() {
-    VoxelWfcModel voxelWfcModel = new VoxelWfcModel(
+    IVoxelAlgorithm voxelWfcModel = new VoxelWfcModel(
         inputArray,
         patternSize.get(),
         outputSize.get(),
@@ -476,6 +478,9 @@ public class App extends Application {
     return spacer;
   }
 
+  /**
+   * Entry point of the application.
+   */
   public static void main(String[] args) {
     launch();
   }

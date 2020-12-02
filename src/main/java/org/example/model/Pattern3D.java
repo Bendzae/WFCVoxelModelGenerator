@@ -3,6 +3,9 @@ package org.example.model;
 import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * Abstraction of a 3D voxel pattern in the Voxel-WFC.
+ */
 public class Pattern3D {
     private int size;
     private int[][][] values;

@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.List;
 import org.example.model.Pattern3D;
 
+/**
+ * Exposes the functionality of the VoxelWfcModel class.
+ */
 public interface IVoxelAlgorithm {
 
   int[][][] solve();

@@ -2,6 +2,11 @@ package org.example.shared;
 
 import java.util.Objects;
 
+/**
+ * A generic 3D-Vector class.
+ * From the JVox Voxel Parser repository: https://github.com/Lignum/JVox
+ * @author Original Author: Lignum https://github.com/Lignum/
+ */
 public final class Vector3<T extends Number> {
     private final T x, y, z;
 

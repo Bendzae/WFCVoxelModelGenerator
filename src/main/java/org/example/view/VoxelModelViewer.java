@@ -15,9 +15,12 @@ import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Transform;
-import org.example.model.VoxelWfcModel;
+import org.example.shared.IVoxelAlgorithm;
 import org.example.shared.Vector3;
 
+/**
+ * Used to render Voxel Models in an interactive viewer using JavaFX.
+ */
 public class VoxelModelViewer {
 
   private SmartGroup boxes;
@@ -94,7 +97,7 @@ public class VoxelModelViewer {
     this.palette = palette;
   }
 
-  public void showPatterns(VoxelWfcModel voxelWfcModel, int patternSize) {
+  public void showPatterns(IVoxelAlgorithm voxelWfcModel, int patternSize) {
     boxes.getChildren().clear();
     voxelWfcModel.getPatternsByPosition().get(0).forEach((pos, i) -> boxes.getChildren()
         .addAll(createBoxesFromVoxelArray(

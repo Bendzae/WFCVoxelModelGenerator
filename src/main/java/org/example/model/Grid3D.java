@@ -2,6 +2,9 @@ package org.example.model;
 
 import org.example.shared.Vector3;
 
+/**
+ * This class is used to abstract Voxel models passed in as a 3D-array and offers some utility for its use in the VoxelWfcModel.
+ */
 public class Grid3D {
 
     private int[][][] grid;

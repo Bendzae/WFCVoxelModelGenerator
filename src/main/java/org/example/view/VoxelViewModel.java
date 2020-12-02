@@ -2,6 +2,9 @@ package org.example.view;
 
 import org.example.shared.Vector3;
 
+/**
+ *
+ */
 public class VoxelViewModel {
 
   int[][][] voxelData;

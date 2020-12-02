@@ -15,6 +15,10 @@ import org.example.voxparser.VoxReader;
 import org.example.voxparser.VoxSerializer;
 import org.example.voxparser.Voxel;
 
+/**
+ * Used to import and export Voxel models from and to file.
+ * Encapsulates usage of the JVox library by Lignum https://github.com/Lignum/JVox
+ */
 public class ModelImporterExporter {
 
   public static VoxelViewModel loadVoxelModelFromFile(String filepath) {

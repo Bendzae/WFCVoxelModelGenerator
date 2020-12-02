@@ -3,6 +3,9 @@ package org.example.model;
 import java.util.List;
 import org.example.shared.Vector3;
 
+/**
+ * Collection of utility methods and constants used in the model package.
+ */
 public class Utils {
 
     public static final Vector3<Integer> LEFT = new Vector3(-1, 0, 0);

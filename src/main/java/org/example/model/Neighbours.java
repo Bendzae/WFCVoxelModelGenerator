@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.stream.Stream;
 
+/**
+ * Used to store possible neighbouring Patterns for a certain pattern.
+ */
 public class Neighbours {
 
   public HashMap<Direction3D, HashSet<Integer>> neighbours;
