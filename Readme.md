@@ -5,17 +5,18 @@ loading example Voxel Models, manipulating Parameters of the algorithm aswell
 as export the generated Models. This application was developed as part of a Bachelor-Thesis
 in CS at HAW-Hamburg, in cooperation with Prof. Dr. Philip Jenke.
 
+Bachelor-Thesis: https://users.informatik.haw-hamburg.de/~abo781/abschlussarbeiten/ba_dzaebel.pdf
 
 ![i1](./example.png)
 ## Setup
 ### Prerequisites
-* **Java JDK 11+** 
+* **Java JDK 16** 
 * **Maven** 
 * **Intellij Idea** (recommended but not  required)
 ### Project Setup
 (1) First clone the master-branch of this Repository:  
 ```
-git clone https://git.haw-hamburg.de/acg303/wfc.git
+git clone https://github.com/Bendzae/WFCVoxelModelGenerator.git
 ```
 (2) Move into the project directory and install dependencies with Maven
 ```
